@@ -59,9 +59,20 @@ Tất cả AI Agent **TUYỆT ĐỐI KHÔNG ĐƯỢC TỰ Ý THAY ĐỔI** công
 - Luôn định nghĩa rõ ràng interface / type trong `src/types/`.
 - Kết quả trả về từ Gemini AI **phải luôn được validate** (ưu tiên dùng Zod hoặc Typed Schema) trước khi đưa vào Database hoặc render lên giao diện.
 
+### Quy tắc 5: Quy trình Git Commit nghiêm ngặt (Strict Git Workflow)
+- **Kiểm tra trước khi sửa:** BẮT BUỘC chạy `git status` trước khi thực hiện bất kỳ chỉnh sửa hoặc tạo file mới nào. Nếu còn thay đổi chưa commit, phải commit dứt điểm trước khi làm việc mới.
+- **Commit ngay sau khi làm xong:** Mỗi khi hoàn thành một chỉnh sửa hoặc tạo mới file, BẮT BUỘC chạy commit ngay lập tức.
+- **Chuẩn commit:** Tuân thủ quy chuẩn Conventional Commits chuẩn quốc tế và **viết hoàn toàn bằng tiếng Anh** (ví dụ: `feat: add landing page hero section`, `docs: update task list for sprint 1`, `refactor: optimize speech recognition hook`).
+
 ---
 
-## 4. Các Lệnh Terminal Thường Dùng (Sử dụng pnpm)
+## 4. Môi Trường Hệ Điều Hành: NixOS
+- Máy trạm phát triển đang chạy **NixOS 26.11 (Zokor)**.
+- Khi cần cấu hình dev shell hoặc công cụ môi trường, sử dụng giải pháp chuẩn của Nix (`shell.nix`, `flake.nix` hoặc `devenv`) để đảm bảo tính tái lập (reproducible build).
+
+---
+
+## 5. Các Lệnh Terminal Thường Dùng (Sử dụng pnpm)
 ```bash
 # Chạy môi trường development
 pnpm dev
@@ -85,7 +96,7 @@ pnpm prisma studio
 
 ---
 
-## 5. Quy Ước Thư Mục (Folder Conventions)
+## 6. Quy Ước Thư Mục (Folder Conventions)
 ```text
 src/
 ├── app/                  # Next.js App Router (Pages, Layouts, API Routes)
