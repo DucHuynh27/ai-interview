@@ -10,8 +10,9 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
+# testing & coverage
 /coverage
+*.lcov
 
 # next.js
 /.next/
@@ -19,19 +20,63 @@
 
 # production
 /build
+/dist
 
-# misc
-.DS_Store
-*.pem
-
-# debug
+# debug & logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 
-# env files (can opt-in for committing if needed)
+# environment variables & secrets
 .env*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+
+# user uploads & candidate CVs / audio (Data Privacy)
+uploads/
+/public/uploads/
+*.pdf
+*.wav
+*.mp3
+*.ogg
+*.webm
+*.m4a
+
+# database & local storage
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# nix & direnv
+.direnv/
+result
+result-*
+
+# IDE & editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+.directory
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# AI agents & local tool caches
+.gemini/
+.claude/
+.cursor/
+.windsurf/
 
 # vercel
 .vercel
