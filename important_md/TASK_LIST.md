@@ -1,0 +1,91 @@
+# TASK LIST & SPRINT PROGRESS: AI-INTERVIEW
+
+Bảng theo dõi tiến độ chi tiết từng Sprint và từng Task của dự án **AI-Interview**.
+Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng thái `[ ]` thành `[x]` trong file này.
+
+---
+
+## 📊 Bảng Tổng Quan Tiến Độ
+
+| Sprint | Tên Sprint | Mục Tiêu Chính | Trạng Thái | Tiến Độ |
+| :--- | :--- | :--- | :---: | :---: |
+| **Sprint 1** | Khởi Tạo Nền Tảng & Setup UI | Dựng khung Next.js 15, UI Upload CV PDF & PII Masking | Đang làm | 50% |
+| **Sprint 2** | Não Bộ AI (Gemini 2.0 Flash) | Parse PDF CV, đối soát JD, sinh 5 câu hỏi STAR & Persona | Chưa bắt đầu | 0% |
+| **Sprint 3** | Phòng Phỏng Vấn Giọng Nói | Turn-based Voice (Web Speech STT & TTS), Waveform UI | Chưa bắt đầu | 0% |
+| **Sprint 4** | Đánh Giá STAR & Báo Cáo | Chấm điểm Situation, Task, Action, Result & Câu mẫu điểm 10 | Chưa bắt đầu | 0% |
+| **Sprint 5** | Database, Auth & Pitching | Google Login, Cloud Database, Dashboard lịch sử & Demo deck | Chưa bắt đầu | 0% |
+
+---
+
+## 🏃 Chi Tiết Từng Sprint & Task
+
+### SPRINT 1: Khởi Tạo Nền Tảng, Agent Context & Setup UI (Tuần 1 - Tuần 2)
+- [x] **Task 1.0:** Khởi tạo bộ 3 file Context `important_md/AGENT.md`, `important_md/ARCHITECTURE.md`, `important_md/TASK_LIST.md` để đồng bộ ngữ cảnh cho mọi AI agent.
+  - *Tiêu chuẩn hoàn thành (DoD):* Cả 3 file đã được tạo với đầy đủ thông số kỹ thuật, quy tắc stack và roadmap.
+- [x] **Task 1.1:** Khởi tạo dự án Next.js 15 với TypeScript, Tailwind CSS và bộ UI `shadcn/ui`.
+  - *Files:* `package.json`, `tailwind.config.ts`, `components.json`, `src/app/layout.tsx`.
+  - *Tiêu chuẩn hoàn thành (DoD):* Chạy `pnpm dev` hiển thị trang chủ thành công, `pnpm build` không có lỗi lint/types.
+- [ ] **Task 1.2:** Thiết kế Landing Page giới thiệu tính năng & Nút "Bắt đầu phỏng vấn ngay".
+  - *Files:* `src/app/page.tsx`, `src/components/landing/*`.
+  - *Tiêu chuẩn hoàn thành (DoD):* Giao diện hiện đại, responsive trên cả mobile và desktop, giới thiệu 3 Persona và chuẩn STAR.
+- [ ] **Task 1.3:** Xây dựng màn hình Cấu hình phỏng vấn (`/interview/setup`):
+  - *Files:* `src/app/interview/setup/page.tsx`, `src/components/interview/SetupForm.tsx`.
+  - *Tính năng:* Drag & Drop file PDF CV, Textarea dán JD, Bộ chọn Ngôn ngữ (VI/EN), Bộ chọn Persona (3 lựa chọn trực quan).
+  - *Tiêu chuẩn hoàn thành (DoD):* Validate form đầy đủ (bắt buộc có CV PDF và JD, dung lượng PDF < 5MB).
+- [ ] **Task 1.4:** Xây dựng Module PII Masking (Khử định danh thông tin cá nhân):
+  - *Files:* `src/lib/utils/pii-masker.ts`, `src/lib/utils/pii-masker.test.ts`.
+  - *Tiêu chuẩn hoàn thành (DoD):* Tự động phát hiện và che SĐT Việt Nam, Email, Địa chỉ thành `[REDACTED_PHONE]`, `[REDACTED_EMAIL]`.
+
+---
+
+### SPRINT 2: Não Bộ AI - Gemini 2.0 Flash API (Tuần 3 - Tuần 4)
+- [ ] **Task 2.1:** Thiết lập Google Gemini SDK và cấu hình biến môi trường `.env.local`.
+  - *Files:* `src/lib/ai/gemini-client.ts`, `.env.example`.
+  - *Tiêu chuẩn hoàn thành (DoD):* Kết nối thành công tới Gemini 2.0 Flash API, có fallback error handling rõ ràng.
+- [ ] **Task 2.2:** Xây dựng Server Action xử lý CV PDF và JD (`generateInterviewQuestions`):
+  - *Files:* `src/app/actions/interview.ts`, `src/lib/ai/prompts/question-generator.ts`.
+  - *Tiêu chuẩn hoàn thành (DoD):* Đọc file PDF buffer, gửi kèm JD và prompt Persona sang Gemini, trả về JSON 5 câu hỏi chuẩn type.
+- [ ] **Task 2.3:** Xây dựng màn hình Preview & Xác nhận trước khi vào phòng (`/interview/[id]/preview`):
+  - *Files:* `src/app/interview/[id]/preview/page.tsx`.
+  - *Tiêu chuẩn hoàn thành (DoD):* Hiển thị tóm tắt các điểm mạnh, điểm khuyết AI vừa phân tích và danh sách 5 câu hỏi chuẩn bị phỏng vấn.
+
+---
+
+### SPRINT 3: Phòng Phỏng Vấn Giọng Nói (Text $\rightarrow$ Voice) (Tuần 5 - Tuần 7)
+- [ ] **Task 3.1:** Dựng giao diện Phòng phỏng vấn giả lập (`/interview/[id]`):
+  - *Files:* `src/app/interview/[id]/page.tsx`, `src/components/interview/InterviewRoom.tsx`.
+  - *Tiêu chuẩn hoàn thành (DoD):* Mô phỏng phòng họp online chuyên nghiệp: Avatar người phỏng vấn tương ứng Persona, khung phụ đề, thanh tiến độ 5 câu hỏi.
+- [ ] **Task 3.2:** Luồng hỏi - đáp từng lượt bằng Text (Base Conversation Loop):
+  - *Tiêu chuẩn hoàn thành (DoD):* AI hiển thị câu hỏi $\rightarrow$ Ứng viên gõ trả lời $\rightarrow$ AI đưa ra phản hồi ngắn dẫn dắt $\rightarrow$ chuyển câu kế tiếp mượt mà.
+- [ ] **Task 3.3:** Tích hợp Web Speech API (Speech-to-Text) tiếng Việt & tiếng Anh:
+  - *Files:* `src/lib/speech/use-speech-recognition.ts`, `src/components/voice/MicButton.tsx`, `src/components/voice/Waveform.tsx`.
+  - *Tiêu chuẩn hoàn thành (DoD):* Bấm nút Mic nói $\rightarrow$ chữ hiện realtime vào ô trả lời $\rightarrow$ có hiệu ứng sóng âm nhấp nhô theo âm lượng.
+- [ ] **Task 3.4:** Tích hợp Text-to-Speech (TTS) phát âm giọng đọc AI:
+  - *Files:* `src/lib/speech/use-speech-synthesis.ts`.
+  - *Tiêu chuẩn hoàn thành (DoD):* AI tự động đọc to câu hỏi bằng tiếng Việt hoặc tiếng Anh chuẩn khi đến lượt.
+
+---
+
+### SPRINT 4: Đánh Giá STAR & Báo Cáo Chuyên Sâu (Tuần 8 - Tuần 10)
+- [ ] **Task 4.1:** Xây dựng Engine chấm điểm STAR trên Gemini (`evaluateInterviewSession`):
+  - *Files:* `src/lib/ai/prompts/star-evaluator.ts`, `src/app/actions/report.ts`.
+  - *Tiêu chuẩn hoàn thành (DoD):* Đọc toàn bộ Transcript buổi phỏng vấn, tính điểm 4 tiêu chí STAR (1-10), điểm tổng quan (1-100), chỉ ra điểm mạnh/yếu cụ thể cho từng câu.
+- [ ] **Task 4.2:** Thiết kế Giao diện Báo cáo kết quả (`/interview/[id]/result`):
+  - *Files:* `src/app/interview/[id]/result/page.tsx`, `src/components/report/*`.
+  - *Tiêu chuẩn hoàn thành (DoD):* Hiển thị Radar Chart STAR trực quan, Card phân tích điểm mạnh/yếu, và khung "Câu trả lời mẫu điểm 10" cho từng câu.
+- [ ] **Task 4.3:** Tính năng xuất báo cáo PDF (Export PDF Report):
+  - *Tiêu chuẩn hoàn thành (DoD):* Người dùng có thể nhấn nút tải toàn bộ bảng đánh giá về máy để ôn luyện offline.
+
+---
+
+### SPRINT 5: Database, Authentication & Chuẩn Bị Thi Khởi Nghiệp (Tuần 11 - Tuần 12)
+- [ ] **Task 5.1:** Tích hợp Google OAuth qua Clerk Auth hoặc NextAuth:
+  - *Tiêu chuẩn hoàn thành (DoD):* Đăng nhập an toàn, lưu thông tin phiên người dùng.
+- [ ] **Task 5.2:** Kết nối Database PostgreSQL Cloud (Neon/Supabase) qua Prisma:
+  - *Files:* `prisma/schema.prisma`, `src/lib/db/prisma.ts`.
+  - *Tiêu chuẩn hoàn thành (DoD):* Lưu trữ đầy đủ lịch sử các buổi phỏng vấn, transcript câu trả lời và báo cáo điểm số.
+- [ ] **Task 5.3:** Màn hình Dashboard cá nhân (`/dashboard`):
+  - *Files:* `src/app/dashboard/page.tsx`.
+  - *Tiêu chuẩn hoàn thành (DoD):* Xem lại các buổi phỏng vấn cũ, biểu đồ tiến bộ điểm số qua thời gian.
+- [ ] **Task 5.4:** Chuẩn bị Demo Khởi nghiệp (Startup Pitching Assets):
+  - *Nội dung:* Bài thuyết trình Unit Economics (~200đ/buổi), tài liệu bảo mật PII, kịch bản demo trực tiếp 3 phút "chuẩn không tì vết" trên sân khấu.
