@@ -62,7 +62,16 @@ Tất cả AI Agent **TUYỆT ĐỐI KHÔNG ĐƯỢC TỰ Ý THAY ĐỔI** công
 ### Quy tắc 5: Quy trình Git Commit nghiêm ngặt (Strict Git Workflow)
 - **Kiểm tra trước khi sửa:** BẮT BUỘC chạy `git status` trước khi thực hiện bất kỳ chỉnh sửa hoặc tạo file mới nào. Nếu còn thay đổi chưa commit, phải commit dứt điểm trước khi làm việc mới.
 - **Commit ngay sau khi làm xong:** Mỗi khi hoàn thành một chỉnh sửa hoặc tạo mới file, BẮT BUỘC chạy commit ngay lập tức.
-- **Chuẩn commit:** Tuân thủ quy chuẩn Conventional Commits chuẩn quốc tế và **viết hoàn toàn bằng tiếng Anh** (ví dụ: `feat: add landing page hero section`, `docs: update task list for sprint 1`, `refactor: optimize speech recognition hook`).
+- **Chuẩn commit:** Tuân thủ quy chuẩn Conventional Commits và **BẮT BUỘC PHẢI CÓ SCOPE**, viết hoàn toàn bằng tiếng Anh:
+  - Cấu trúc: `<type>(<scope>): <description>`
+  - Types: `feat`, `fix`, `docs`, `refactor`, `style`, `test`, `chore`.
+  - Scopes ví dụ: `(landing)`, `(interview)`, `(voice)`, `(report)`, `(agent)`, `(nix)`, `(auth)`, `(db)`, `(deps)`.
+  - Ví dụ chuẩn:
+    - `feat(landing): add hero section and CTA buttons`
+    - `docs(agent): require mandatory scope in conventional commits`
+    - `fix(pii): correct vietnamese phone regex pattern`
+    - `chore(deps): install lucide-react icons`
+    - `refactor(speech): split web speech hooks into separate modules`
 
 ---
 
