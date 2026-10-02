@@ -1,26 +1,35 @@
-import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 import {
     ArrowRight,
     CheckCircle2,
-    Github,
+    Code2,
     Mic,
     Play,
     Shield,
 } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import Link from "next/link";
 
 export function HeroSection() {
     return (
         <section className="relative overflow-hidden pt-24 pb-16 md:pt-32 md:pb-24">
             {/* Background elements */}
             <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))]"></div>
-            <div className="absolute top-0 right-0 -z-10 h-[500px] w-[500px] rounded-full bg-primary/5 blur-3xl" />
+            <div className="absolute top-0 right-0 -z-10 h-125 w-125 rounded-full bg-primary/5 blur-3xl" />
 
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="text-center">
-                    <Badge variant="outline" className="rounded-full bg-background/50 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-primary mb-6">
+                    <Badge
+                        variant="outline"
+                        className="rounded-full bg-background/50 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-primary mb-6"
+                    >
                         <span className="flex size-2 rounded-full bg-primary mr-2 animate-pulse"></span>
                         Powered by Gemini 2.0 Flash
                     </Badge>
@@ -55,7 +64,8 @@ export function HeroSection() {
                             className={buttonVariants({
                                 variant: "outline",
                                 size: "lg",
-                                className: "h-12 px-8 text-base bg-background/50 backdrop-blur-sm",
+                                className:
+                                    "h-12 px-8 text-base bg-background/50 backdrop-blur-sm",
                             })}
                         >
                             <Play className="size-4 mr-2" />
@@ -69,7 +79,7 @@ export function HeroSection() {
                             Bảo mật 100% CV
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <Github className="size-4" />
+                            <Code2 className="size-4" />
                             Mã nguồn mở
                         </div>
                     </div>
@@ -89,7 +99,10 @@ export function HeroSection() {
                                     <CheckCircle2 className="size-3 mr-1" />
                                     Đã che PII an toàn
                                 </Badge>
-                                <Badge variant="secondary" className="font-mono tabular-nums text-muted-foreground">
+                                <Badge
+                                    variant="secondary"
+                                    className="font-mono tabular-nums text-muted-foreground"
+                                >
                                     Câu hỏi 2 / 5
                                 </Badge>
                             </div>
@@ -102,15 +115,17 @@ export function HeroSection() {
                                         <CardContent className="p-4">
                                             <div className="flex items-center gap-2 text-xs font-semibold text-primary">
                                                 <span className="size-2 rounded-full bg-primary" />
-                                                Challenging Manager (Stress Test)
+                                                Challenging Manager (Stress
+                                                Test)
                                             </div>
                                             <p className="mt-2 text-sm leading-relaxed text-foreground">
-                                                &ldquo;Trong CV bạn nói đã tối ưu hóa
-                                                thời gian tải trang giảm 40%, nhưng bạn
-                                                có thể nói rõ cụ thể chỉ số Web Vitals
-                                                nào đã thay đổi và giải pháp kỹ thuật
-                                                quyết định là gì? Đừng nói chung chung
-                                                về team.&rdquo;
+                                                &ldquo;Trong CV bạn nói đã tối
+                                                ưu hóa thời gian tải trang giảm
+                                                40%, nhưng bạn có thể nói rõ cụ
+                                                thể chỉ số Web Vitals nào đã
+                                                thay đổi và giải pháp kỹ thuật
+                                                quyết định là gì? Đừng nói chung
+                                                chung về team.&rdquo;
                                             </p>
                                         </CardContent>
                                     </Card>
@@ -120,18 +135,19 @@ export function HeroSection() {
                                             <div className="flex items-center justify-between text-xs font-semibold text-blue-600 dark:text-blue-400">
                                                 <span className="flex items-center gap-1.5">
                                                     <Mic className="size-3.5 animate-pulse" />
-                                                    Ứng viên đang trả lời bằng giọng nói
-                                                    (STT)...
+                                                    Ứng viên đang trả lời bằng
+                                                    giọng nói (STT)...
                                                 </span>
                                                 <span className="font-mono tabular-nums text-[11px] text-muted-foreground">
                                                     00:42
                                                 </span>
                                             </div>
                                             <p className="mt-2 text-sm italic leading-relaxed text-muted-foreground">
-                                                &ldquo;Em đã đo lường chỉ số Largest
-                                                Contentful Paint (LCP) trên Lighthouse
-                                                và phát hiện bundle kích thước lớn do
-                                                import toàn bộ icons...&rdquo;
+                                                &ldquo;Em đã đo lường chỉ số
+                                                Largest Contentful Paint (LCP)
+                                                trên Lighthouse và phát hiện
+                                                bundle kích thước lớn do import
+                                                toàn bộ icons...&rdquo;
                                             </p>
                                         </CardContent>
                                     </Card>
@@ -201,8 +217,8 @@ export function HeroSection() {
                                             <span className="font-semibold text-foreground">
                                                 Gợi ý AI:
                                             </span>{" "}
-                                            Bổ sung thêm tỷ lệ % cải thiện LCP cụ thể
-                                            sau khi tách dynamic import.
+                                            Bổ sung thêm tỷ lệ % cải thiện LCP
+                                            cụ thể sau khi tách dynamic import.
                                         </div>
                                     </CardFooter>
                                 </Card>
