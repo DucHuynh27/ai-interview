@@ -1,3 +1,6 @@
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     ArrowRight,
     BarChart3,
@@ -10,9 +13,6 @@ import {
     UserCheck,
 } from "lucide-react";
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const FEATURES = [
     {
@@ -80,7 +80,10 @@ export function FeaturesSection() {
             >
                 <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
-                        <Badge variant="outline" className="rounded-full bg-background font-semibold">
+                        <Badge
+                            variant="outline"
+                            className="rounded-full bg-background font-semibold"
+                        >
                             Công nghệ tiên tiến
                         </Badge>
                         <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -124,7 +127,10 @@ export function FeaturesSection() {
             >
                 <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
-                        <Badge variant="secondary" className="rounded-full font-semibold">
+                        <Badge
+                            variant="secondary"
+                            className="rounded-full font-semibold"
+                        >
                             Quy trình đơn giản
                         </Badge>
                         <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">

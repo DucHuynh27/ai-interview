@@ -27,7 +27,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             lang="vi"
             className={`${beVietnamPro.variable} ${jetbrainsMono.variable} h-full antialiased`}
         >
-            <body className="min-h-full flex flex-col font-sans">{children}</body>
+            <body className="min-h-full flex flex-col font-sans">
+                {children}
+            </body>
         </html>
     );
 }

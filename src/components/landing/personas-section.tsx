@@ -1,7 +1,14 @@
-import { CheckCircle2, Flame, HeartHandshake, Terminal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { CheckCircle2, Flame, HeartHandshake, Terminal } from "lucide-react";
 
 interface PersonaCardProps {
     id: string;
@@ -80,7 +87,10 @@ export function PersonasSection() {
         >
             <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                 <div className="mx-auto max-w-2xl text-center">
-                    <Badge variant="outline" className="rounded-full bg-background font-semibold">
+                    <Badge
+                        variant="outline"
+                        className="rounded-full bg-background font-semibold"
+                    >
                         3 Người phỏng vấn AI độc bản
                     </Badge>
                     <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -108,7 +118,10 @@ export function PersonasSection() {
                                         >
                                             <Icon className="size-5" />
                                         </div>
-                                        <Badge variant="secondary" className="font-medium text-muted-foreground">
+                                        <Badge
+                                            variant="secondary"
+                                            className="font-medium text-muted-foreground"
+                                        >
                                             {persona.badge}
                                         </Badge>
                                     </div>

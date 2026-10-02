@@ -1,7 +1,14 @@
-import { Award, Check, Compass, ListTodo, TrendingUp, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Award, Check, Compass, ListTodo, TrendingUp, Zap } from "lucide-react";
 
 const STAR_PILLARS = [
     {
@@ -50,7 +57,10 @@ export function StarFrameworkSection() {
         >
             <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                 <div className="mx-auto max-w-2xl text-center">
-                    <Badge variant="secondary" className="rounded-full font-semibold">
+                    <Badge
+                        variant="secondary"
+                        className="rounded-full font-semibold"
+                    >
                         Phương pháp phỏng vấn chuẩn quốc tế
                     </Badge>
                     <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -77,7 +87,10 @@ export function StarFrameworkSection() {
                                         <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-base font-extrabold text-primary-foreground">
                                             {pillar.letter}
                                         </span>
-                                        <Badge variant="outline" className="font-mono tabular-nums text-xs text-muted-foreground">
+                                        <Badge
+                                            variant="outline"
+                                            className="font-mono tabular-nums text-xs text-muted-foreground"
+                                        >
                                             Tỷ trọng {pillar.weight}
                                         </Badge>
                                     </div>
@@ -137,19 +150,20 @@ export function StarFrameworkSection() {
                                     </Badge>
                                 </div>
                                 <p className="mt-2 text-xs leading-relaxed text-muted-foreground italic">
-                                    &ldquo;Tại công ty X (Situation), hệ thống báo
-                                    lỗi 504 khi đạt 10.000 CCU (Task). Tôi đã chủ
-                                    động phân tích memory leak bằng pprof, tái cấu
-                                    trúc connection pool và áp dụng Redis cache
-                                    (Action). Kết quả giảm 80% tải DB và latency
-                                    trung bình giảm từ 450ms xuống 45ms
-                                    (Result).&rdquo;
+                                    &ldquo;Tại công ty X (Situation), hệ thống
+                                    báo lỗi 504 khi đạt 10.000 CCU (Task). Tôi
+                                    đã chủ động phân tích memory leak bằng
+                                    pprof, tái cấu trúc connection pool và áp
+                                    dụng Redis cache (Action). Kết quả giảm 80%
+                                    tải DB và latency trung bình giảm từ 450ms
+                                    xuống 45ms (Result).&rdquo;
                                 </p>
                                 <Separator className="my-3" />
                                 <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
                                     <Check className="size-3.5" />
                                     <span>
-                                        Số liệu rõ ràng • Nêu bật hành động cá nhân
+                                        Số liệu rõ ràng • Nêu bật hành động cá
+                                        nhân
                                     </span>
                                 </div>
                             </CardContent>
