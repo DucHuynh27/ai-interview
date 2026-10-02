@@ -73,6 +73,25 @@ Tất cả AI Agent **TUYỆT ĐỐI KHÔNG ĐƯỢC TỰ Ý THAY ĐỔI** công
     - `chore(deps): install lucide-react icons`
     - `refactor(speech): split web speech hooks into separate modules`
 
+### Quy tắc 6: Viết Code Tự Nhiên & Triệt Tiêu "Mùi AI" (Human-Grade Code Standards)
+Codebase phải phản ánh chất lượng của một Senior Fullstack Engineer, tuyệt đối tránh các "dấu vết" điển hình của AI:
+- **Xóa sạch comment hiển nhiên (No Redundant Comments):**
+  - CẤM comment mô tả lại cú pháp hoặc hành động hiển nhiên (ví dụ: `// Check if user exists`, `// Return data`, `// Render header component`, `// Handle button click`).
+  - CHỈ comment khi giải thích **lý do nghiệp vụ phức tạp**, workaround cho browser quirk / edge-case đặc thù, hoặc ghi chú kỹ thuật thật sự cần thiết.
+- **Không phòng thủ quá đà (No Defensive Overkill):**
+  - Không bọc `try-catch` vụn vặt ở mọi dòng code; ưu tiên xử lý lỗi tập trung qua Error Boundary hoặc centralized handler.
+  - Tận dụng TypeScript strict mode và optional chaining (`?.`, `??`) thay vì lồng 3-4 tầng `if (obj !== null && obj !== undefined)`.
+- **Tránh trừu tượng hóa vụn vặt (No Over-Abstraction & Avoid Utils Dumping):**
+  - CẤM tự ý tạo các file helper/util chỉ chứa 1-2 dòng code đơn giản. Ưu tiên **Colocation** (viết trực tiếp tại nơi sử dụng).
+  - Chỉ tách helper khi logic đó thực sự được tái sử dụng ở từ 2-3 nơi khác nhau trong hệ thống.
+- **Đặt tên chuẩn nghiệp vụ (Domain-Driven Naming):**
+  - CẤM dùng tên generic, sách giáo khoa: `data`, `item`, `res`, `payload`, `handleData()`, `UserHelper`.
+  - BẮT BUỘC dùng tên phản ánh chính xác nghiệp vụ: `candidateCv`, `interviewSessionId`, `maskVietnamesePhone()`, `evaluateStarCriteria()`.
+- **Áp dụng Idiom hiện đại của Next.js 15 & React 19:**
+  - Tận dụng Server Components mặc định, Server Actions, modern hooks (`useTransition`, `useActionState`), Zod schema validation.
+  - CẤM dùng các antipattern cũ (như `useEffect` để fetch data thủ công, state lồng nhau không kiểm soát).
+  - Giữ code sạch, format thống nhất theo cấu hình linter/formatter của dự án.
+
 ---
 
 ## 4. Môi Trường Hệ Điều Hành: NixOS
