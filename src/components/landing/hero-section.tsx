@@ -26,7 +26,7 @@ export function HeroSection() {
 
                     <h1 className="mt-6 max-w-4xl text-3xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
                         Luyện phỏng vấn thông minh với{" "}
-                        <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        <span className="bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                             AI 3 phong cách
                         </span>{" "}
                         chuẩn hóa
