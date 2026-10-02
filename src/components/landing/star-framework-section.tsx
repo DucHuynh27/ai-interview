@@ -74,7 +74,7 @@ export function StarFrameworkSection() {
                                         <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-base font-extrabold text-primary-foreground">
                                             {pillar.letter}
                                         </span>
-                                        <span className="font-mono text-xs text-muted-foreground">
+                                        <span className="font-mono tabular-nums text-xs text-muted-foreground">
                                             Tỷ trọng {pillar.weight}
                                         </span>
                                     </div>
@@ -126,7 +126,7 @@ export function StarFrameworkSection() {
                                 <span className="text-emerald-600 dark:text-emerald-400">
                                     Gold Standard Answer
                                 </span>
-                                <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[11px] text-emerald-600 dark:text-emerald-400">
+                                <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 font-mono tabular-nums text-[11px] text-emerald-600 dark:text-emerald-400">
                                     10/10 STAR
                                 </span>
                             </div>

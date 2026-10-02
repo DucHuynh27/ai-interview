@@ -96,7 +96,7 @@ export function HeroSection() {
                                     <CheckCircle2 className="size-3" />
                                     Đã che PII an toàn
                                 </span>
-                                <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-mono text-muted-foreground">
+                                <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-mono tabular-nums text-muted-foreground">
                                     Câu hỏi 2 / 5
                                 </span>
                             </div>
@@ -126,7 +126,7 @@ export function HeroSection() {
                                             Ứng viên đang trả lời bằng giọng nói
                                             (STT)...
                                         </span>
-                                        <span className="font-mono text-[11px] text-muted-foreground">
+                                        <span className="font-mono tabular-nums text-[11px] text-muted-foreground">
                                             00:42
                                         </span>
                                     </div>
@@ -150,7 +150,7 @@ export function HeroSection() {
                                                 <span className="font-medium">
                                                     Situation (Bối cảnh)
                                                 </span>
-                                                <span className="font-semibold text-emerald-600">
+                                                <span className="font-mono tabular-nums font-semibold text-emerald-600">
                                                     8.5/10
                                                 </span>
                                             </div>
@@ -166,7 +166,7 @@ export function HeroSection() {
                                                 <span className="font-medium">
                                                     Action (Hành động cá nhân)
                                                 </span>
-                                                <span className="font-semibold text-blue-600">
+                                                <span className="font-mono tabular-nums font-semibold text-blue-600">
                                                     9.0/10
                                                 </span>
                                             </div>
@@ -182,7 +182,7 @@ export function HeroSection() {
                                                 <span className="font-medium">
                                                     Result (Kết quả định lượng)
                                                 </span>
-                                                <span className="font-semibold text-amber-500">
+                                                <span className="font-mono tabular-nums font-semibold text-amber-500">
                                                     7.0/10
                                                 </span>
                                             </div>

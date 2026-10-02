@@ -147,7 +147,7 @@ export function FeaturesSection() {
                                     key={item.step}
                                     className="relative flex flex-col items-center rounded-2xl border border-border/70 bg-card p-6 text-center shadow-sm"
                                 >
-                                    <span className="font-mono text-2xl font-black text-muted-foreground/40">
+                                    <span className="font-mono tabular-nums text-2xl font-black text-muted-foreground/40">
                                         {item.step}
                                     </span>
                                     <div className="mt-3 flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
