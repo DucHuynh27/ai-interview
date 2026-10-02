@@ -142,7 +142,7 @@ export function FeaturesSection() {
                             return (
                                 <Card
                                     key={item.step}
-                                    className="relative flex flex-col items-center border-border/70 text-center shadow-sm"
+                                    className="relative border-border/70 text-center shadow-sm"
                                 >
                                     <CardHeader className="flex flex-col items-center pb-2">
                                         <span className="font-mono tabular-nums text-2xl font-black text-muted-foreground/40">
