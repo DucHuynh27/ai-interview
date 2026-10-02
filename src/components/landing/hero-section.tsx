@@ -1,212 +1,214 @@
-import { buttonVariants } from "@/components/ui/button";
+import Link from "next/link";
 import {
     ArrowRight,
     CheckCircle2,
+    Github,
     Mic,
-    ShieldCheck,
-    Sparkles,
+    Play,
+    Shield,
 } from "lucide-react";
-import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 
 export function HeroSection() {
     return (
-        <section className="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-28">
-            <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_50%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))]" />
+        <section className="relative overflow-hidden pt-24 pb-16 md:pt-32 md:pb-24">
+            {/* Background elements */}
+            <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))]"></div>
+            <div className="absolute top-0 right-0 -z-10 h-[500px] w-[500px] rounded-full bg-primary/5 blur-3xl" />
 
-            <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-                <div className="flex flex-col items-center text-center">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-muted/60 px-3.5 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
-                        <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span>Dành cho sinh viên &amp; người chuyển ngành</span>
-                        <span className="text-muted-foreground">•</span>
-                        <span className="text-muted-foreground">
-                            Chuẩn STAR Framework
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="text-center">
+                    <Badge variant="outline" className="rounded-full bg-background/50 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-primary mb-6">
+                        <span className="flex size-2 rounded-full bg-primary mr-2 animate-pulse"></span>
+                        Powered by Gemini 2.0 Flash
+                    </Badge>
+
+                    <h1 className="mx-auto max-w-4xl text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+                        Nâng tầm phỏng vấn với{" "}
+                        <span className="bg-linear-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                            AI-Interview
                         </span>
-                    </div>
-
-                    <h1 className="mt-6 max-w-4xl text-3xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
-                        Luyện phỏng vấn thông minh với{" "}
-                        <span className="bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                            AI 3 phong cách
-                        </span>{" "}
-                        chuẩn hóa
                     </h1>
 
-                    <p className="mt-6 max-w-2xl text-base text-muted-foreground sm:text-lg">
-                        Tải lên CV PDF, đối soát tức thì với Job Description. Tự
-                        động che thông tin cá nhân (PII), tương tác trực tiếp
-                        bằng giọng nói và nhận báo cáo đánh giá kèm câu trả lời
-                        mẫu điểm 10.
+                    <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
+                        Luyện tập phỏng vấn như thật với 3 Persona khó nhằn. AI
+                        tự động chấm điểm theo STAR Framework, che giấu dữ liệu
+                        cá nhân (PII) và hỗ trợ giao tiếp bằng giọng nói thời
+                        gian thực.
                     </p>
 
-                    <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
                         <Link
                             href="/interview/setup"
                             className={buttonVariants({
                                 size: "lg",
-                                className:
-                                    "h-11 px-6 text-sm font-semibold shadow-md",
+                                className: "h-12 px-8 text-base shadow-sm",
                             })}
                         >
-                            Bắt đầu phỏng vấn ngay
+                            Trải nghiệm miễn phí
                             <ArrowRight className="size-4" />
                         </Link>
-                        <a
-                            href="#personas"
+                        <Link
+                            href="#demo"
                             className={buttonVariants({
                                 variant: "outline",
                                 size: "lg",
-                                className: "h-11 px-6 text-sm font-semibold",
+                                className: "h-12 px-8 text-base bg-background/50 backdrop-blur-sm",
                             })}
                         >
-                            Xem 3 người phỏng vấn ảo
-                        </a>
+                            <Play className="size-4 mr-2" />
+                            Xem Demo
+                        </Link>
                     </div>
 
-                    <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground">
+                    <div className="mt-6 flex items-center justify-center gap-6 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1.5">
-                            <ShieldCheck className="size-4 text-emerald-600" />
-                            <span>Bảo mật PII tự động</span>
+                            <Shield className="size-4 text-emerald-500" />
+                            Bảo mật 100% CV
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <Mic className="size-4 text-blue-600" />
-                            <span>Voice Turn-based không độ trễ</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <Sparkles className="size-4 text-amber-500" />
-                            <span>Chi phí ~2 lốp / lượt thực hành</span>
+                            <Github className="size-4" />
+                            Mã nguồn mở
                         </div>
                     </div>
                 </div>
 
-                <div className="mt-14 rounded-2xl border border-border/80 bg-card/60 p-3 shadow-xl backdrop-blur-sm sm:p-4 md:mt-16">
-                    <div className="overflow-hidden rounded-xl border border-border/60 bg-background p-4 sm:p-6">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-4">
-                            <div className="flex items-center gap-3">
-                                <div className="size-3 rounded-full bg-red-400" />
-                                <div className="size-3 rounded-full bg-amber-400" />
-                                <div className="size-3 rounded-full bg-emerald-400" />
-                                <span className="ml-2 font-mono text-xs text-muted-foreground">
-                                    Phòng phỏng vấn mô phỏng • Persona:
-                                    Challenging Manager
-                                </span>
+                {/* Mock UI Demo */}
+                <div className="mt-16 sm:mt-24">
+                    <Card className="mx-auto max-w-5xl rounded-2xl border-border/60 bg-background/50 shadow-2xl backdrop-blur-xl">
+                        <CardHeader className="flex flex-row items-center justify-between border-b border-border/40 px-6 py-4">
+                            <div className="flex gap-2">
+                                <div className="size-3 rounded-full bg-rose-500/80" />
+                                <div className="size-3 rounded-full bg-amber-500/80" />
+                                <div className="size-3 rounded-full bg-emerald-500/80" />
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                                    <CheckCircle2 className="size-3" />
+                                <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 border-transparent">
+                                    <CheckCircle2 className="size-3 mr-1" />
                                     Đã che PII an toàn
-                                </span>
-                                <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-mono tabular-nums text-muted-foreground">
+                                </Badge>
+                                <Badge variant="secondary" className="font-mono tabular-nums text-muted-foreground">
                                     Câu hỏi 2 / 5
-                                </span>
+                                </Badge>
                             </div>
-                        </div>
+                        </CardHeader>
 
-                        <div className="mt-6 grid gap-6 md:grid-cols-12">
-                            <div className="flex flex-col gap-4 md:col-span-8">
-                                <div className="rounded-xl border border-border/70 bg-muted/40 p-4">
-                                    <div className="flex items-center gap-2 text-xs font-semibold text-primary">
-                                        <span className="size-2 rounded-full bg-primary" />
-                                        Challenging Manager (Stress Test)
-                                    </div>
-                                    <p className="mt-2 text-sm leading-relaxed text-foreground">
-                                        &ldquo;Trong CV bạn nói đã tối ưu hóa
-                                        thời gian tải trang giảm 40%, nhưng bạn
-                                        có thể nói rõ cụ thể chỉ số Web Vitals
-                                        nào đã thay đổi và giải pháp kỹ thuật
-                                        quyết định là gì? Đừng nói chung chung
-                                        về team.&rdquo;
-                                    </p>
-                                </div>
+                        <CardContent className="p-6">
+                            <div className="grid gap-6 md:grid-cols-12">
+                                <div className="flex flex-col gap-4 md:col-span-8">
+                                    <Card className="rounded-xl border-border/70 bg-muted/40 shadow-none">
+                                        <CardContent className="p-4">
+                                            <div className="flex items-center gap-2 text-xs font-semibold text-primary">
+                                                <span className="size-2 rounded-full bg-primary" />
+                                                Challenging Manager (Stress Test)
+                                            </div>
+                                            <p className="mt-2 text-sm leading-relaxed text-foreground">
+                                                &ldquo;Trong CV bạn nói đã tối ưu hóa
+                                                thời gian tải trang giảm 40%, nhưng bạn
+                                                có thể nói rõ cụ thể chỉ số Web Vitals
+                                                nào đã thay đổi và giải pháp kỹ thuật
+                                                quyết định là gì? Đừng nói chung chung
+                                                về team.&rdquo;
+                                            </p>
+                                        </CardContent>
+                                    </Card>
 
-                                <div className="rounded-xl border border-blue-500/30 bg-blue-500/5 p-4">
-                                    <div className="flex items-center justify-between text-xs font-semibold text-blue-600 dark:text-blue-400">
-                                        <span className="flex items-center gap-1.5">
-                                            <Mic className="size-3.5 animate-pulse" />
-                                            Ứng viên đang trả lời bằng giọng nói
-                                            (STT)...
-                                        </span>
-                                        <span className="font-mono tabular-nums text-[11px] text-muted-foreground">
-                                            00:42
-                                        </span>
-                                    </div>
-                                    <p className="mt-2 text-sm italic leading-relaxed text-muted-foreground">
-                                        &ldquo;Em đã đo lường chỉ số Largest
-                                        Contentful Paint (LCP) trên Lighthouse
-                                        và phát hiện bundle kích thước lớn do
-                                        import toàn bộ icons...&rdquo;
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col justify-between rounded-xl border border-border/70 bg-card p-4 md:col-span-4">
-                                <div>
-                                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                        Phân tích STAR tức thì
-                                    </span>
-                                    <div className="mt-3 space-y-2.5">
-                                        <div>
-                                            <div className="flex justify-between text-xs">
-                                                <span className="font-medium">
-                                                    Situation (Bối cảnh)
+                                    <Card className="rounded-xl border-blue-500/30 bg-blue-500/5 shadow-none">
+                                        <CardContent className="p-4">
+                                            <div className="flex items-center justify-between text-xs font-semibold text-blue-600 dark:text-blue-400">
+                                                <span className="flex items-center gap-1.5">
+                                                    <Mic className="size-3.5 animate-pulse" />
+                                                    Ứng viên đang trả lời bằng giọng nói
+                                                    (STT)...
                                                 </span>
-                                                <span className="font-mono tabular-nums font-semibold text-emerald-600">
-                                                    8.5/10
+                                                <span className="font-mono tabular-nums text-[11px] text-muted-foreground">
+                                                    00:42
                                                 </span>
                                             </div>
-                                            <div className="mt-1 h-1.5 w-full rounded-full bg-muted">
-                                                <div
-                                                    className="h-1.5 rounded-full bg-emerald-500"
-                                                    style={{ width: "85%" }}
-                                                />
+                                            <p className="mt-2 text-sm italic leading-relaxed text-muted-foreground">
+                                                &ldquo;Em đã đo lường chỉ số Largest
+                                                Contentful Paint (LCP) trên Lighthouse
+                                                và phát hiện bundle kích thước lớn do
+                                                import toàn bộ icons...&rdquo;
+                                            </p>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+
+                                <Card className="flex flex-col justify-between rounded-xl border-border/70 shadow-sm md:col-span-4 bg-card">
+                                    <CardHeader className="p-4 pb-2">
+                                        <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                            Phân tích STAR tức thì
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-4 pt-2">
+                                        <div className="space-y-3">
+                                            <div>
+                                                <div className="flex justify-between text-xs mb-1.5">
+                                                    <span className="font-medium">
+                                                        Situation
+                                                    </span>
+                                                    <span className="font-mono tabular-nums font-semibold text-emerald-600">
+                                                        8.5/10
+                                                    </span>
+                                                </div>
+                                                <div className="h-1.5 w-full rounded-full bg-muted">
+                                                    <div
+                                                        className="h-1.5 rounded-full bg-emerald-500"
+                                                        style={{ width: "85%" }}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="flex justify-between text-xs mb-1.5">
+                                                    <span className="font-medium">
+                                                        Action
+                                                    </span>
+                                                    <span className="font-mono tabular-nums font-semibold text-blue-600">
+                                                        9.0/10
+                                                    </span>
+                                                </div>
+                                                <div className="h-1.5 w-full rounded-full bg-muted">
+                                                    <div
+                                                        className="h-1.5 rounded-full bg-blue-500"
+                                                        style={{ width: "90%" }}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="flex justify-between text-xs mb-1.5">
+                                                    <span className="font-medium">
+                                                        Result
+                                                    </span>
+                                                    <span className="font-mono tabular-nums font-semibold text-amber-500">
+                                                        7.0/10
+                                                    </span>
+                                                </div>
+                                                <div className="h-1.5 w-full rounded-full bg-muted">
+                                                    <div
+                                                        className="h-1.5 rounded-full bg-amber-500"
+                                                        style={{ width: "70%" }}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
-                                        <div>
-                                            <div className="flex justify-between text-xs">
-                                                <span className="font-medium">
-                                                    Action (Hành động cá nhân)
-                                                </span>
-                                                <span className="font-mono tabular-nums font-semibold text-blue-600">
-                                                    9.0/10
-                                                </span>
-                                            </div>
-                                            <div className="mt-1 h-1.5 w-full rounded-full bg-muted">
-                                                <div
-                                                    className="h-1.5 rounded-full bg-blue-500"
-                                                    style={{ width: "90%" }}
-                                                />
-                                            </div>
+                                    </CardContent>
+                                    <CardFooter className="p-4 pt-0">
+                                        <div className="w-full rounded-lg bg-muted/60 p-2.5 text-xs text-muted-foreground">
+                                            💡{" "}
+                                            <span className="font-semibold text-foreground">
+                                                Gợi ý AI:
+                                            </span>{" "}
+                                            Bổ sung thêm tỷ lệ % cải thiện LCP cụ thể
+                                            sau khi tách dynamic import.
                                         </div>
-                                        <div>
-                                            <div className="flex justify-between text-xs">
-                                                <span className="font-medium">
-                                                    Result (Kết quả định lượng)
-                                                </span>
-                                                <span className="font-mono tabular-nums font-semibold text-amber-500">
-                                                    7.0/10
-                                                </span>
-                                            </div>
-                                            <div className="mt-1 h-1.5 w-full rounded-full bg-muted">
-                                                <div
-                                                    className="h-1.5 rounded-full bg-amber-500"
-                                                    style={{ width: "70%" }}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="mt-4 rounded-lg bg-muted/60 p-2.5 text-xs text-muted-foreground">
-                                    💡{" "}
-                                    <span className="font-semibold text-foreground">
-                                        Gợi ý AI:
-                                    </span>{" "}
-                                    Bổ sung thêm tỷ lệ % cải thiện LCP cụ thể
-                                    sau khi tách dynamic import.
-                                </div>
+                                    </CardFooter>
+                                </Card>
                             </div>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </section>

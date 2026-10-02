@@ -1,36 +1,31 @@
-import { buttonVariants } from "@/components/ui/button";
 import {
     ArrowRight,
     BarChart3,
     Coins,
+    Cpu,
     FileCheck2,
-    FileText,
     Languages,
-    Mic2,
-    ShieldAlert,
+    ShieldCheck,
     Upload,
     UserCheck,
 } from "lucide-react";
 import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const FEATURES = [
     {
-        icon: FileText,
-        title: "Phân tích CV PDF trực tiếp",
+        icon: Cpu,
+        title: "Tốc độ phản hồi Real-time",
         description:
-            "Công nghệ đa phương thức của Gemini 2.0 Flash đọc trực tiếp file PDF, đối soát với mô tả công việc (JD) để tìm ra 2-3 điểm mạnh và các lỗ hổng cần rèn luyện.",
+            "Sử dụng Gemini 2.0 Flash thế hệ mới qua WebSockets cho tốc độ phản hồi gần như tức thì, mô phỏng nhịp độ phỏng vấn thực tế một cách chân thực nhất.",
     },
     {
-        icon: ShieldAlert,
-        title: "Bảo mật PII tự động",
+        icon: ShieldCheck,
+        title: "Bảo mật Dữ liệu PII",
         description:
-            "Tự động khử định danh số điện thoại, email, địa chỉ trước khi gửi sang máy chủ AI. Dữ liệu cá nhân của bạn hoàn toàn được bảo vệ.",
-    },
-    {
-        icon: Mic2,
-        title: "Turn-based Voice 0 độ trễ",
-        description:
-            "AI đọc câu hỏi to rõ, ứng viên trả lời bằng giọng nói qua Web Speech API. Trực quan với hiệu ứng sóng âm và chuyển ngữ văn bản thời gian thực.",
+            "Tự động ẩn/che các thông tin nhạy cảm (PII) trong CV như số điện thoại, email, địa chỉ trước khi gửi cho LLM xử lý, đảm bảo an toàn tuyệt đối.",
     },
     {
         icon: Languages,
@@ -85,9 +80,9 @@ export function FeaturesSection() {
             >
                 <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
-                        <div className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background px-3 py-1 text-xs font-semibold text-muted-foreground">
+                        <Badge variant="outline" className="rounded-full bg-background font-semibold">
                             Công nghệ tiên tiến
-                        </div>
+                        </Badge>
                         <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
                             Đột phá công nghệ hỗ trợ ứng viên
                         </h2>
@@ -101,20 +96,22 @@ export function FeaturesSection() {
                         {FEATURES.map((feature, idx) => {
                             const Icon = feature.icon;
                             return (
-                                <div
+                                <Card
                                     key={idx}
-                                    className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm transition-all hover:border-border hover:shadow-md"
+                                    className="border-border/70 shadow-sm transition-all hover:border-border hover:shadow-md"
                                 >
-                                    <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                                        <Icon className="size-5" />
-                                    </div>
-                                    <h3 className="mt-4 text-base font-bold tracking-tight">
-                                        {feature.title}
-                                    </h3>
-                                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                                    <CardHeader className="pb-4">
+                                        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary mb-2">
+                                            <Icon className="size-5" />
+                                        </div>
+                                        <CardTitle className="text-base font-bold tracking-tight">
+                                            {feature.title}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="pt-0 text-xs leading-relaxed text-muted-foreground">
                                         {feature.description}
-                                    </p>
-                                </div>
+                                    </CardContent>
+                                </Card>
                             );
                         })}
                     </div>
@@ -127,9 +124,9 @@ export function FeaturesSection() {
             >
                 <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
-                        <div className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/60 px-3 py-1 text-xs font-semibold text-muted-foreground">
+                        <Badge variant="secondary" className="rounded-full font-semibold">
                             Quy trình đơn giản
-                        </div>
+                        </Badge>
                         <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
                             Sẵn sàng phỏng vấn chỉ sau 3 bước
                         </h2>
@@ -143,23 +140,25 @@ export function FeaturesSection() {
                         {WORKFLOW_STEPS.map((item) => {
                             const Icon = item.icon;
                             return (
-                                <div
+                                <Card
                                     key={item.step}
-                                    className="relative flex flex-col items-center rounded-2xl border border-border/70 bg-card p-6 text-center shadow-sm"
+                                    className="relative flex flex-col items-center border-border/70 text-center shadow-sm"
                                 >
-                                    <span className="font-mono tabular-nums text-2xl font-black text-muted-foreground/40">
-                                        {item.step}
-                                    </span>
-                                    <div className="mt-3 flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-                                        <Icon className="size-5" />
-                                    </div>
-                                    <h3 className="mt-4 text-base font-bold tracking-tight">
-                                        {item.title}
-                                    </h3>
-                                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                                    <CardHeader className="flex flex-col items-center pb-2">
+                                        <span className="font-mono tabular-nums text-2xl font-black text-muted-foreground/40">
+                                            {item.step}
+                                        </span>
+                                        <div className="mt-3 flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+                                            <Icon className="size-5" />
+                                        </div>
+                                        <CardTitle className="mt-4 text-base font-bold tracking-tight">
+                                            {item.title}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="pt-0 text-xs leading-relaxed text-muted-foreground">
                                         {item.description}
-                                    </p>
-                                </div>
+                                    </CardContent>
+                                </Card>
                             );
                         })}
                     </div>

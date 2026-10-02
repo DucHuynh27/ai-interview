@@ -1,4 +1,7 @@
 import { CheckCircle2, Flame, HeartHandshake, Terminal } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface PersonaCardProps {
     id: string;
@@ -77,9 +80,9 @@ export function PersonasSection() {
         >
             <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                 <div className="mx-auto max-w-2xl text-center">
-                    <div className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background px-3 py-1 text-xs font-semibold text-muted-foreground">
+                    <Badge variant="outline" className="rounded-full bg-background font-semibold">
                         3 Người phỏng vấn AI độc bản
-                    </div>
+                    </Badge>
                     <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
                         Tập dượt với mọi phong cách phỏng vấn
                     </h2>
@@ -94,34 +97,37 @@ export function PersonasSection() {
                     {PERSONAS.map((persona) => {
                         const Icon = persona.icon;
                         return (
-                            <div
+                            <Card
                                 key={persona.id}
-                                className="flex flex-col justify-between rounded-2xl border border-border/70 bg-card p-6 shadow-sm transition-all hover:border-border hover:shadow-md"
+                                className="flex flex-col justify-between border-border/70 shadow-sm transition-all hover:border-border hover:shadow-md"
                             >
-                                <div>
-                                    <div className="flex items-center justify-between">
+                                <CardHeader className="pb-4">
+                                    <div className="flex items-center justify-between mb-2">
                                         <div
                                             className={`flex size-11 items-center justify-center rounded-xl border ${persona.accentColor}`}
                                         >
                                             <Icon className="size-5" />
                                         </div>
-                                        <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                                        <Badge variant="secondary" className="font-medium text-muted-foreground">
                                             {persona.badge}
-                                        </span>
+                                        </Badge>
                                     </div>
 
-                                    <h3 className="mt-5 text-xl font-bold tracking-tight">
+                                    <CardTitle className="text-xl font-bold tracking-tight">
                                         {persona.name}
-                                    </h3>
-                                    <p className="text-xs font-semibold text-muted-foreground">
+                                    </CardTitle>
+                                    <div className="text-xs font-semibold text-muted-foreground mt-0">
                                         {persona.role}
-                                    </p>
+                                    </div>
 
-                                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                                    <CardDescription className="mt-2 text-sm leading-relaxed">
                                         {persona.description}
-                                    </p>
+                                    </CardDescription>
+                                </CardHeader>
 
-                                    <div className="mt-5 space-y-2 border-t border-border/60 pt-4">
+                                <CardContent className="pt-0">
+                                    <Separator className="mb-4" />
+                                    <div className="space-y-2">
                                         {persona.highlights.map((item, idx) => (
                                             <div
                                                 key={idx}
@@ -132,20 +138,22 @@ export function PersonasSection() {
                                             </div>
                                         ))}
                                     </div>
-                                </div>
+                                </CardContent>
 
-                                <div className="mt-6 rounded-xl border border-border/60 bg-muted/40 p-3.5">
-                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                        Ví dụ câu hỏi:
+                                <CardFooter className="pt-0 pb-6">
+                                    <div className="rounded-xl border border-border/60 bg-muted/40 p-3.5 w-full">
+                                        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                            Ví dụ câu hỏi:
+                                        </div>
+                                        <div
+                                            className="mt-1 text-xs italic text-muted-foreground"
+                                            dangerouslySetInnerHTML={{
+                                                __html: persona.sampleQuestion,
+                                            }}
+                                        />
                                     </div>
-                                    <div
-                                        className="mt-1 text-xs italic text-muted-foreground"
-                                        dangerouslySetInnerHTML={{
-                                            __html: persona.sampleQuestion,
-                                        }}
-                                    />
-                                </div>
-                            </div>
+                                </CardFooter>
+                            </Card>
                         );
                     })}
                 </div>
