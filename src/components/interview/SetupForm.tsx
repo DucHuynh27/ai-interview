@@ -357,7 +357,11 @@ export function SetupForm() {
                             }
                         >
                             <SelectTrigger id="language" className="w-52 text-sm">
-                                <SelectValue />
+                                <SelectValue>
+                                    {form.language === "vi"
+                                        ? "🇻🇳 Tiếng Việt"
+                                        : "🇬🇧 English"}
+                                </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="vi">
