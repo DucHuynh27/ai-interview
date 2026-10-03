@@ -31,9 +31,7 @@ const GenerateQuestionsSchema = z.object({
         extractedSkills: z.array(z.string()).min(1),
         identifiedGaps: z.array(z.string()).min(1),
     }),
-    questions: z
-        .array(InterviewQuestionSchema)
-        .length(5),
+    questions: z.array(InterviewQuestionSchema).length(5),
 });
 
 // ─── Types for Server Action response ────────────────────────────────────────
@@ -72,10 +70,7 @@ Analyze them and generate the interview plan now. Remember: respond with ONLY th
         contents: [
             {
                 role: "user",
-                parts: [
-                    cvPart,
-                    { text: userPrompt },
-                ],
+                parts: [cvPart, { text: userPrompt }],
             },
         ],
     });
