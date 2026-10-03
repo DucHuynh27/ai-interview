@@ -80,7 +80,9 @@ describe("maskPii — social media links", () => {
     });
 
     it("masks an Instagram profile URL", () => {
-        const { masked } = maskPii("Instagram: https://www.instagram.com/user_123");
+        const { masked } = maskPii(
+            "Instagram: https://www.instagram.com/user_123",
+        );
         expect(masked).toContain("[REDACTED_SOCIAL]");
     });
 

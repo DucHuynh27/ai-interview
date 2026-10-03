@@ -7,13 +7,13 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 
 ## 📊 Bảng Tổng Quan Tiến Độ
 
-| Sprint       | Tên Sprint                   | Mục Tiêu Chính                                              |  Trạng Thái  | Tiến Độ |
-| :----------- | :--------------------------- | :---------------------------------------------------------- | :----------: | :-----: |
-| **Sprint 1** | Khởi Tạo Nền Tảng & Setup UI | Dựng khung Next.js 15, UI Upload CV PDF & PII Masking       |  ✅ Hoàn thành  |  100%   |
-| **Sprint 2** | Não Bộ AI (Gemini 2.0 Flash) | Parse PDF CV, đối soát JD, sinh 5 câu hỏi STAR & Persona    | Chưa bắt đầu |   0%    |
-| **Sprint 3** | Phòng Phỏng Vấn Giọng Nói    | Turn-based Voice (Web Speech STT & TTS), Waveform UI        | Chưa bắt đầu |   0%    |
-| **Sprint 4** | Đánh Giá STAR & Báo Cáo      | Chấm điểm Situation, Task, Action, Result & Câu mẫu điểm 10 | Chưa bắt đầu |   0%    |
-| **Sprint 5** | Database, Auth & Pitching    | Google Login, Cloud Database, Dashboard lịch sử & Demo deck | Chưa bắt đầu |   0%    |
+| Sprint       | Tên Sprint                   | Mục Tiêu Chính                                              |  Trạng Thái   | Tiến Độ |
+| :----------- | :--------------------------- | :---------------------------------------------------------- | :-----------: | :-----: |
+| **Sprint 1** | Khởi Tạo Nền Tảng & Setup UI | Dựng khung Next.js 15, UI Upload CV PDF & PII Masking       | ✅ Hoàn thành |  100%   |
+| **Sprint 2** | Não Bộ AI (Gemini 2.0 Flash) | Parse PDF CV, đối soát JD, sinh 5 câu hỏi STAR & Persona    | Chưa bắt đầu  |   0%    |
+| **Sprint 3** | Phòng Phỏng Vấn Giọng Nói    | Turn-based Voice (Web Speech STT & TTS), Waveform UI        | Chưa bắt đầu  |   0%    |
+| **Sprint 4** | Đánh Giá STAR & Báo Cáo      | Chấm điểm Situation, Task, Action, Result & Câu mẫu điểm 10 | Chưa bắt đầu  |   0%    |
+| **Sprint 5** | Database, Auth & Pitching    | Google Login, Cloud Database, Dashboard lịch sử & Demo deck | Chưa bắt đầu  |   0%    |
 
 ---
 
@@ -41,7 +41,7 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 
 ### SPRINT 2: Não Bộ AI - Gemini 2.0 Flash API (Tuần 3 - Tuần 4)
 
-- [ ] **Task 2.1:** Thiết lập Google Gemini SDK và cấu hình biến môi trường `.env.local`.
+- [x] **Task 2.1:** Thiết lập Google Gemini SDK và cấu hình biến môi trường `.env.local`.
     - _Files:_ `src/lib/ai/gemini-client.ts`, `.env.example`.
     - _Tiêu chuẩn hoàn thành (DoD):_ Kết nối thành công tới Gemini 2.0 Flash API, có fallback error handling rõ ràng.
 - [ ] **Task 2.2:** Xây dựng Server Action xử lý CV PDF và JD (`generateInterviewQuestions`):
