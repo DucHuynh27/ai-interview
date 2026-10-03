@@ -33,7 +33,7 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
     - _Files:_ `src/app/interview/setup/page.tsx`, `src/components/interview/SetupForm.tsx`.
     - _Tính năng:_ Drag & Drop file PDF CV, Textarea dán JD, Bộ chọn Ngôn ngữ (VI/EN), Bộ chọn Persona (3 lựa chọn trực quan).
     - _Tiêu chuẩn hoàn thành (DoD):_ Validate form đầy đủ (bắt buộc có CV PDF và JD, dung lượng PDF < 5MB).
-- [ ] **Task 1.4:** Xây dựng Module PII Masking (Khử định danh thông tin cá nhân):
+- [x] **Task 1.4:** Xây dựng Module PII Masking (Khử định danh thông tin cá nhân):
     - _Files:_ `src/lib/utils/pii-masker.ts`, `src/lib/utils/pii-masker.test.ts`.
     - _Tiêu chuẩn hoàn thành (DoD):_ Tự động phát hiện và che SĐT, Email, Địa chỉ thành `[REDACTED_PHONE]`, `[REDACTED_EMAIL]`.
 
