@@ -48,7 +48,8 @@ const PERSONA_OPTIONS: PersonaOption[] = [
         role: "Chuyên viên Nhân sự",
         badge: "Thân thiện",
         description: "Bầu không khí thoải mái, tập trung động lực & EQ.",
-        accentColor: "border-emerald-500/40 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400",
+        accentColor:
+            "border-emerald-500/40 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400",
     },
     {
         id: "challenging_manager",
@@ -56,7 +57,8 @@ const PERSONA_OPTIONS: PersonaOption[] = [
         role: "Quản lý / Trưởng phòng",
         badge: "Stress Test",
         description: "Phản biện sắc sảo, truy vấn sâu số liệu trong CV.",
-        accentColor: "border-rose-500/40 bg-rose-500/5 text-rose-600 dark:text-rose-400",
+        accentColor:
+            "border-rose-500/40 bg-rose-500/5 text-rose-600 dark:text-rose-400",
     },
     {
         id: "tech_lead",
@@ -64,7 +66,8 @@ const PERSONA_OPTIONS: PersonaOption[] = [
         role: "Kiến trúc sư Trưởng",
         badge: "Thực chiến",
         description: "Kiểm tra tư duy kỹ thuật, so khớp trực tiếp với JD.",
-        accentColor: "border-indigo-500/40 bg-indigo-500/5 text-indigo-600 dark:text-indigo-400",
+        accentColor:
+            "border-indigo-500/40 bg-indigo-500/5 text-indigo-600 dark:text-indigo-400",
     },
 ];
 
@@ -127,22 +130,16 @@ export function SetupForm() {
         [handleCvFile],
     );
 
-    const handleDragOver = useCallback(
-        (e: React.DragEvent<HTMLDivElement>) => {
-            e.preventDefault();
-            setIsDragging(true);
-        },
-        [],
-    );
+    const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        setIsDragging(true);
+    }, []);
 
     const handleDragLeave = useCallback(() => setIsDragging(false), []);
 
-    const removeCv = () =>
-        setForm((prev) => ({ ...prev, cvFile: null }));
+    const removeCv = () => setForm((prev) => ({ ...prev, cvFile: null }));
 
-    const selectedPersona = PERSONA_OPTIONS.find(
-        (p) => p.id === form.persona,
-    )!;
+    const selectedPersona = PERSONA_OPTIONS.find((p) => p.id === form.persona)!;
     const SelectedPersonaIcon = PERSONA_ICONS[form.persona];
 
     return (
@@ -310,7 +307,9 @@ export function SetupForm() {
                         }
                     />
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                        <span>Tối thiểu 50 ký tự để AI phân tích chính xác</span>
+                        <span>
+                            Tối thiểu 50 ký tự để AI phân tích chính xác
+                        </span>
                         <span
                             className={`font-mono tabular-nums ${form.jobDescription.trim().length < 50 ? "text-muted-foreground" : "text-primary font-semibold"}`}
                         >
@@ -355,8 +354,14 @@ export function SetupForm() {
                                 }))
                             }
                         >
-                            <SelectTrigger id="language" className="w-52 text-sm">
-                                <span className="flex flex-1 text-left text-sm">
+                            <SelectTrigger
+                                id="language"
+                                className="w-52 text-sm"
+                            >
+                                <span
+                                    data-slot="select-value"
+                                    className="flex flex-1 text-left text-sm"
+                                >
                                     {form.language === "vi"
                                         ? "🇻🇳 Tiếng Việt"
                                         : "🇬🇧 English"}
@@ -366,9 +371,7 @@ export function SetupForm() {
                                 <SelectItem value="vi">
                                     🇻🇳 Tiếng Việt
                                 </SelectItem>
-                                <SelectItem value="en">
-                                    🇬🇧 English
-                                </SelectItem>
+                                <SelectItem value="en">🇬🇧 English</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
