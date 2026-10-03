@@ -9,7 +9,7 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 
 | Sprint       | Tên Sprint                   | Mục Tiêu Chính                                              |  Trạng Thái  | Tiến Độ |
 | :----------- | :--------------------------- | :---------------------------------------------------------- | :----------: | :-----: |
-| **Sprint 1** | Khởi Tạo Nền Tảng & Setup UI | Dựng khung Next.js 15, UI Upload CV PDF & PII Masking       |   Đang làm   |   60%   |
+| **Sprint 1** | Khởi Tạo Nền Tảng & Setup UI | Dựng khung Next.js 15, UI Upload CV PDF & PII Masking       |  ✅ Hoàn thành  |  100%   |
 | **Sprint 2** | Não Bộ AI (Gemini 2.0 Flash) | Parse PDF CV, đối soát JD, sinh 5 câu hỏi STAR & Persona    | Chưa bắt đầu |   0%    |
 | **Sprint 3** | Phòng Phỏng Vấn Giọng Nói    | Turn-based Voice (Web Speech STT & TTS), Waveform UI        | Chưa bắt đầu |   0%    |
 | **Sprint 4** | Đánh Giá STAR & Báo Cáo      | Chấm điểm Situation, Task, Action, Result & Câu mẫu điểm 10 | Chưa bắt đầu |   0%    |
