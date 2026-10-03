@@ -44,7 +44,7 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 - [x] **Task 2.1:** Thiết lập Google Gemini SDK và cấu hình biến môi trường `.env.local`.
     - _Files:_ `src/lib/ai/gemini-client.ts`, `.env.example`.
     - _Tiêu chuẩn hoàn thành (DoD):_ Kết nối thành công tới Gemini 2.0 Flash API, có fallback error handling rõ ràng.
-- [ ] **Task 2.2:** Xây dựng Server Action xử lý CV PDF và JD (`generateInterviewQuestions`):
+- [x] **Task 2.2:** Xây dựng Server Action xử lý CV PDF và JD (`generateInterviewQuestions`):
     - _Files:_ `src/app/actions/interview.ts`, `src/lib/ai/prompts/question-generator.ts`.
     - _Tiêu chuẩn hoàn thành (DoD):_ Đọc file PDF buffer, gửi kèm JD và prompt Persona sang Gemini, trả về JSON 5 câu hỏi chuẩn type.
 - [ ] **Task 2.3:** Xây dựng màn hình Preview & Xác nhận trước khi vào phòng (`/interview/[id]/preview`):

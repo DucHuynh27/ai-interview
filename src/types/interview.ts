@@ -5,6 +5,12 @@ export type PersonaType =
 
 export type LanguageCode = "vi" | "en";
 
+export type QuestionCategory =
+    | "WARM_UP"
+    | "BEHAVIORAL_STAR"
+    | "ROLE_SPECIFIC"
+    | "SITUATIONAL";
+
 export interface SetupFormValues {
     cvFile: File | null;
     jobDescription: string;
@@ -19,4 +25,22 @@ export interface PersonaOption {
     badge: string;
     description: string;
     accentColor: string;
+}
+
+export interface InterviewQuestion {
+    order: number;
+    category: QuestionCategory;
+    questionVi: string;
+    questionEn: string;
+    targetGoal: string;
+}
+
+export interface InterviewSummary {
+    extractedSkills: string[];
+    identifiedGaps: string[];
+}
+
+export interface GenerateQuestionsResult {
+    summary: InterviewSummary;
+    questions: InterviewQuestion[];
 }
