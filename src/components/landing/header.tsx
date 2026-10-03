@@ -1,5 +1,6 @@
 import { buttonVariants } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export function Header() {
@@ -7,9 +8,13 @@ export function Header() {
         <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-md">
             <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
                 <Link href="/" className="flex items-center gap-2.5">
-                    <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-                        <Sparkles className="size-4" />
-                    </div>
+                    <Image
+                        src="/logo.png"
+                        alt="AI-Interview logo"
+                        width={36}
+                        height={36}
+                        className="rounded-xl object-cover shadow-sm"
+                    />
                     <div className="flex flex-col">
                         <span className="text-base font-bold tracking-tight">
                             AI-Interview

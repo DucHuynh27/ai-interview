@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export function Footer() {
@@ -6,9 +6,13 @@ export function Footer() {
         <footer className="border-t border-border/60 bg-muted/40 py-12">
             <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-4 sm:flex-row sm:px-6 lg:px-8">
                 <div className="flex items-center gap-2.5">
-                    <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                        <Sparkles className="size-3.5" />
-                    </div>
+                    <Image
+                        src="/logo.png"
+                        alt="AI-Interview logo"
+                        width={28}
+                        height={28}
+                        className="rounded-lg object-cover"
+                    />
                     <span className="text-sm font-bold tracking-tight">
                         AI-Interview
                     </span>
