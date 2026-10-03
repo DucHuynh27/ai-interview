@@ -9,7 +9,7 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 
 | Sprint | Tên Sprint | Mục Tiêu Chính | Trạng Thái | Tiến Độ |
 | :--- | :--- | :--- | :---: | :---: |
-| **Sprint 1** | Khởi Tạo Nền Tảng & Setup UI | Dựng khung Next.js 15, UI Upload CV PDF & PII Masking | Đang làm | 60% |
+| **Sprint 1** | Khởi Tạo Nền Tảng & Setup UI | Dựng khung Next.js 15, UI Upload CV PDF & PII Masking | Đang làm | 75% |
 | **Sprint 2** | Não Bộ AI (Gemini 2.0 Flash) | Parse PDF CV, đối soát JD, sinh 5 câu hỏi STAR & Persona | Chưa bắt đầu | 0% |
 | **Sprint 3** | Phòng Phỏng Vấn Giọng Nói | Turn-based Voice (Web Speech STT & TTS), Waveform UI | Chưa bắt đầu | 0% |
 | **Sprint 4** | Đánh Giá STAR & Báo Cáo | Chấm điểm Situation, Task, Action, Result & Câu mẫu điểm 10 | Chưa bắt đầu | 0% |
@@ -28,7 +28,7 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 - [x] **Task 1.2:** Thiết kế Landing Page giới thiệu tính năng & Nút "Bắt đầu phỏng vấn ngay".
   - *Files:* `src/app/page.tsx`, `src/components/landing/*`.
   - *Tiêu chuẩn hoàn thành (DoD):* Giao diện hiện đại, responsive trên cả mobile và desktop, giới thiệu 3 Persona và chuẩn STAR.
-- [ ] **Task 1.3:** Xây dựng màn hình Cấu hình phỏng vấn (`/interview/setup`):
+- [x] **Task 1.3:** Xây dựng màn hình Cấu hình phỏng vấn (`/interview/setup`):
   - *Files:* `src/app/interview/setup/page.tsx`, `src/components/interview/SetupForm.tsx`.
   - *Tính năng:* Drag & Drop file PDF CV, Textarea dán JD, Bộ chọn Ngôn ngữ (VI/EN), Bộ chọn Persona (3 lựa chọn trực quan).
   - *Tiêu chuẩn hoàn thành (DoD):* Validate form đầy đủ (bắt buộc có CV PDF và JD, dung lượng PDF < 5MB).
