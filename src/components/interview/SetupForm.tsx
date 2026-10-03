@@ -16,7 +16,6 @@ import {
     SelectContent,
     SelectItem,
     SelectTrigger,
-    SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type {
@@ -357,11 +356,11 @@ export function SetupForm() {
                             }
                         >
                             <SelectTrigger id="language" className="w-52 text-sm">
-                                <SelectValue>
+                                <span className="flex flex-1 text-left text-sm">
                                     {form.language === "vi"
                                         ? "🇻🇳 Tiếng Việt"
                                         : "🇬🇧 English"}
-                                </SelectValue>
+                                </span>
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="vi">
