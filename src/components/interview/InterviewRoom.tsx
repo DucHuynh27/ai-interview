@@ -2,10 +2,10 @@
 
 import { submitCandidateAnswerTurn } from "@/app/actions/interview";
 import { PREVIEW_SESSION_KEY } from "@/components/interview/SetupForm";
-import { MicButton } from "@/components/voice/MicButton";
-import { useSpeechRecognition } from "@/lib/speech/use-speech-recognition";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { MicButton } from "@/components/voice/MicButton";
+import { useSpeechRecognition } from "@/lib/speech/use-speech-recognition";
 import type {
     CandidateAnswerSubmission,
     InterviewQuestion,
@@ -230,18 +230,28 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
     const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
 
     // ─── Speech-to-Text (Web Speech API) ─────────────────────────────────────
-    const { status: sttStatus, audioLevel, start: startListening, stop: stopListening } =
-        useSpeechRecognition({
-            language: sessionData.language,
-            onTranscriptChange: (partialText) => {
-                setDraftAnswers((prev) => ({ ...prev, [currentQuestionIndex]: partialText }));
-                if (aiState !== "listening") setAiState("listening");
-            },
-            onFinalResult: (finalText) => {
-                setDraftAnswers((prev) => ({ ...prev, [currentQuestionIndex]: finalText }));
-                setIsMicOn(false);
-            },
-        });
+    const {
+        status: sttStatus,
+        audioLevel,
+        start: startListening,
+        stop: stopListening,
+    } = useSpeechRecognition({
+        language: sessionData.language,
+        onTranscriptChange: (partialText) => {
+            setDraftAnswers((prev) => ({
+                ...prev,
+                [currentQuestionIndex]: partialText,
+            }));
+            if (aiState !== "listening") setAiState("listening");
+        },
+        onFinalResult: (finalText) => {
+            setDraftAnswers((prev) => ({
+                ...prev,
+                [currentQuestionIndex]: finalText,
+            }));
+            setIsMicOn(false);
+        },
+    });
 
     const handleMicToggle = useCallback(() => {
         if (sttStatus === "listening") {
@@ -1082,7 +1092,9 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                                     audioLevel={audioLevel}
                                                     onToggle={handleMicToggle}
                                                     disabled={isPendingSubmit}
-                                                    language={sessionData.language}
+                                                    language={
+                                                        sessionData.language
+                                                    }
                                                 />
 
                                                 <button
@@ -1099,7 +1111,8 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                                         <>
                                                             <Sparkles className="size-3.5 animate-spin" />
                                                             <span>
-                                                                AI đang suy nghĩ...
+                                                                AI đang suy
+                                                                nghĩ...
                                                             </span>
                                                         </>
                                                     ) : (

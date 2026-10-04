@@ -1,7 +1,7 @@
 "use client";
 
 import type { SpeechRecognitionStatus } from "@/lib/speech/use-speech-recognition";
-import { Mic, MicOff, Loader2 } from "lucide-react";
+import { Loader2, Mic, MicOff } from "lucide-react";
 
 interface WaveformProps {
     audioLevel: number; // 0–100
@@ -14,7 +14,11 @@ interface WaveformProps {
  * Bar heights are seeded with a sinusoidal base pattern and scaled by the
  * live `audioLevel` (0–100) coming from the AnalyserNode in the hook.
  */
-export function Waveform({ audioLevel, isActive, barCount = 12 }: WaveformProps) {
+export function Waveform({
+    audioLevel,
+    isActive,
+    barCount = 12,
+}: WaveformProps) {
     // Base heights define the "resting" sinusoidal shape of the waveform
     const baseHeights = Array.from(
         { length: barCount },
