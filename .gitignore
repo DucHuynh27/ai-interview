@@ -56,8 +56,8 @@ uploads/
 
 # nix & direnv
 .direnv/
-result
-result-*
+/result
+/result-*
 
 # IDE & editors
 .idea/
