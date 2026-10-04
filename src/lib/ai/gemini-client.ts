@@ -1,9 +1,27 @@
 import { GoogleGenAI } from "@google/genai";
 
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error("Missing GEMINI_API_KEY environment variable. Please check your .env.local file.");
+let _aiInstance: GoogleGenAI | null = null;
+
+export function getAiClient(): GoogleGenAI | null {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        return null;
+    }
+    if (!_aiInstance) {
+        _aiInstance = new GoogleGenAI({ apiKey });
+    }
+    return _aiInstance;
 }
 
-export const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
+// Lazy proxy object to prevent top-level module crash when GEMINI_API_KEY is not configured yet on deployment
+export const ai = new Proxy({} as GoogleGenAI, {
+    get(_target, prop) {
+        const client = getAiClient();
+        if (!client) {
+            throw new Error(
+                "Chưa cấu hình biến môi trường GEMINI_API_KEY trên máy chủ. Vui lòng kiểm tra Vercel Environment Variables.",
+            );
+        }
+        return (client as unknown as Record<string | symbol, unknown>)[prop];
+    },
 });

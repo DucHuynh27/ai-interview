@@ -51,66 +51,75 @@ export async function generateInterviewQuestions(
     language: LanguageCode,
     persona: PersonaType,
 ): Promise<GenerateQuestionsActionResult> {
-    const sanitizedJd = maskPiiText(rawJobDescription);
+    try {
+        const sanitizedJd = maskPiiText(rawJobDescription);
 
-    const cvBase64 = Buffer.from(cvBuffer).toString("base64");
-    const cvPart = createPartFromBase64(cvBase64, "application/pdf");
+        const cvBase64 = Buffer.from(cvBuffer).toString("base64");
+        const cvPart = createPartFromBase64(cvBase64, "application/pdf");
 
-    const systemInstruction = buildQuestionGeneratorSystemPrompt(
-        persona,
-        language,
-    );
+        const systemInstruction = buildQuestionGeneratorSystemPrompt(
+            persona,
+            language,
+        );
 
-    const userPrompt = `JOB DESCRIPTION:
+        const userPrompt = `JOB DESCRIPTION:
 ${sanitizedJd}
 
 Above is the CV (attached as PDF) and the Job Description.
 Analyze them and generate the interview plan now. Remember: respond with ONLY the JSON object, no markdown, no explanation.`;
 
-    const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        config: { systemInstruction },
-        contents: [
-            {
-                role: "user",
-                parts: [cvPart, { text: userPrompt }],
-            },
-        ],
-    });
+        const response = await ai.models.generateContent({
+            model: "gemini-2.0-flash",
+            config: { systemInstruction },
+            contents: [
+                {
+                    role: "user",
+                    parts: [cvPart, { text: userPrompt }],
+                },
+            ],
+        });
 
-    const rawText = response.text?.trim() ?? "";
+        const rawText = response.text?.trim() ?? "";
 
-    // Strip accidental markdown code fences that some model outputs include
-    const jsonText = rawText
-        .replace(/^```(?:json)?\s*/i, "")
-        .replace(/\s*```$/, "")
-        .trim();
+        // Strip accidental markdown code fences that some model outputs include
+        const jsonText = rawText
+            .replace(/^```(?:json)?\s*/i, "")
+            .replace(/\s*```$/, "")
+            .trim();
 
-    const parsed = (() => {
-        try {
-            return JSON.parse(jsonText);
-        } catch {
-            return null;
+        const parsed = (() => {
+            try {
+                return JSON.parse(jsonText);
+            } catch {
+                return null;
+            }
+        })();
+
+        if (!parsed) {
+            return {
+                ok: false,
+                error: "AI trả về định dạng không hợp lệ. Vui lòng thử lại.",
+            };
         }
-    })();
 
-    if (!parsed) {
+        const validated = GenerateQuestionsSchema.safeParse(parsed);
+
+        if (!validated.success) {
+            return {
+                ok: false,
+                error: `Dữ liệu từ AI không đúng chuẩn: ${validated.error.issues[0]?.message ?? "unknown"}`,
+            };
+        }
+
+        return { ok: true, data: validated.data };
+    } catch (err: unknown) {
+        const message =
+            err instanceof Error ? err.message : "Lỗi hệ thống máy chủ.";
         return {
             ok: false,
-            error: "AI trả về định dạng không hợp lệ. Vui lòng thử lại.",
+            error: `Không thể kết nối AI: ${message}`,
         };
     }
-
-    const validated = GenerateQuestionsSchema.safeParse(parsed);
-
-    if (!validated.success) {
-        return {
-            ok: false,
-            error: `Dữ liệu từ AI không đúng chuẩn: ${validated.error.issues[0]?.message ?? "unknown"}`,
-        };
-    }
-
-    return { ok: true, data: validated.data };
 }
 
 // ─── Turn Feedback Schema & Action ───────────────────────────────────────────
@@ -127,78 +136,87 @@ export type SubmitAnswerActionResult = TurnActionSuccess | TurnActionError;
 export async function submitCandidateAnswerTurn(
     submission: CandidateAnswerSubmission,
 ): Promise<SubmitAnswerActionResult> {
-    if (
-        !submission.candidateAnswer ||
-        submission.candidateAnswer.trim().length === 0
-    ) {
-        return {
-            ok: false,
-            error: "Câu trả lời không được để trống.",
-        };
-    }
-
-    const sanitizedAnswer = maskPiiText(submission.candidateAnswer.trim());
-
-    const { systemInstruction, userPrompt } = buildTurnResponderPrompt({
-        persona: submission.persona,
-        language: submission.language,
-        questionText: submission.questionText,
-        category: submission.category,
-        targetGoal: submission.targetGoal,
-        candidateAnswer: sanitizedAnswer,
-        isFinalQuestion: submission.isFinalQuestion,
-    });
-
-    const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        config: { systemInstruction },
-        contents: [
-            {
-                role: "user",
-                parts: [{ text: userPrompt }],
-            },
-        ],
-    });
-
-    const rawText = response.text?.trim() ?? "";
-    const jsonText = rawText
-        .replace(/^```(?:json)?\s*/i, "")
-        .replace(/\s*```$/, "")
-        .trim();
-
-    const parsed = (() => {
-        try {
-            return JSON.parse(jsonText);
-        } catch {
-            return null;
+    try {
+        if (
+            !submission.candidateAnswer ||
+            submission.candidateAnswer.trim().length === 0
+        ) {
+            return {
+                ok: false,
+                error: "Câu trả lời không được để trống.",
+            };
         }
-    })();
 
-    if (!parsed) {
+        const sanitizedAnswer = maskPiiText(submission.candidateAnswer.trim());
+
+        const { systemInstruction, userPrompt } = buildTurnResponderPrompt({
+            persona: submission.persona,
+            language: submission.language,
+            questionText: submission.questionText,
+            category: submission.category,
+            targetGoal: submission.targetGoal,
+            candidateAnswer: sanitizedAnswer,
+            isFinalQuestion: submission.isFinalQuestion,
+        });
+
+        const response = await ai.models.generateContent({
+            model: "gemini-2.0-flash",
+            config: { systemInstruction },
+            contents: [
+                {
+                    role: "user",
+                    parts: [{ text: userPrompt }],
+                },
+            ],
+        });
+
+        const rawText = response.text?.trim() ?? "";
+        const jsonText = rawText
+            .replace(/^```(?:json)?\s*/i, "")
+            .replace(/\s*```$/, "")
+            .trim();
+
+        const parsed = (() => {
+            try {
+                return JSON.parse(jsonText);
+            } catch {
+                return null;
+            }
+        })();
+
+        if (!parsed) {
+            return {
+                ok: false,
+                error: "AI không thể xử lý phản hồi lúc này. Vui lòng thử lại.",
+            };
+        }
+
+        const validated = TurnFeedbackSchema.safeParse(parsed);
+
+        if (!validated.success) {
+            return {
+                ok: false,
+                error: "Định dạng phản hồi từ AI không đúng cấu trúc.",
+            };
+        }
+
+        const { acknowledgment, transition } = validated.data;
+        const fullResponse = `${acknowledgment} ${transition}`.trim();
+
+        return {
+            ok: true,
+            data: {
+                acknowledgment,
+                transition,
+                fullResponse,
+            },
+        };
+    } catch (err: unknown) {
+        const message =
+            err instanceof Error ? err.message : "Lỗi kết nối máy chủ AI.";
         return {
             ok: false,
-            error: "AI không thể xử lý phản hồi lúc này. Vui lòng thử lại.",
+            error: `Lỗi kết nối AI: ${message}`,
         };
     }
-
-    const validated = TurnFeedbackSchema.safeParse(parsed);
-
-    if (!validated.success) {
-        return {
-            ok: false,
-            error: "Định dạng phản hồi từ AI không đúng cấu trúc.",
-        };
-    }
-
-    const { acknowledgment, transition } = validated.data;
-    const fullResponse = `${acknowledgment} ${transition}`.trim();
-
-    return {
-        ok: true,
-        data: {
-            acknowledgment,
-            transition,
-            fullResponse,
-        },
-    };
 }

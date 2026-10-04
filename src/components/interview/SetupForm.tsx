@@ -159,34 +159,44 @@ export function SetupForm() {
         setSubmitError(null);
 
         startTransition(async () => {
-            const cvBuffer = await cvFile.arrayBuffer();
+            try {
+                const cvBuffer = await cvFile.arrayBuffer();
 
-            const result = await generateInterviewQuestions(
-                cvBuffer,
-                form.jobDescription,
-                form.language,
-                form.persona,
-            );
+                const result = await generateInterviewQuestions(
+                    cvBuffer,
+                    form.jobDescription,
+                    form.language,
+                    form.persona,
+                );
 
-            if (!result.ok) {
-                setSubmitError(result.error);
-                return;
+                if (!result.ok) {
+                    setSubmitError(result.error);
+                    return;
+                }
+
+                // Generate a temporary session ID until DB is wired up.
+                const sessionId = crypto.randomUUID();
+
+                sessionStorage.setItem(
+                    `${PREVIEW_SESSION_KEY}:${sessionId}`,
+                    JSON.stringify({
+                        sessionId,
+                        persona: form.persona,
+                        language: form.language,
+                        data: result.data,
+                    }),
+                );
+
+                router.push(`/interview/${sessionId}/preview`);
+            } catch (err: unknown) {
+                const message =
+                    err instanceof Error
+                        ? err.message
+                        : "Đã xảy ra sự cố khi gửi dữ liệu.";
+                setSubmitError(
+                    `Lỗi kết nối máy chủ: ${message}. Vui lòng kiểm tra dung lượng file hoặc thử lại.`,
+                );
             }
-
-            // Generate a temporary session ID until DB is wired up.
-            const sessionId = crypto.randomUUID();
-
-            sessionStorage.setItem(
-                `${PREVIEW_SESSION_KEY}:${sessionId}`,
-                JSON.stringify({
-                    sessionId,
-                    persona: form.persona,
-                    language: form.language,
-                    data: result.data,
-                }),
-            );
-
-            router.push(`/interview/${sessionId}/preview`);
         });
     }
 
