@@ -1,6 +1,6 @@
 "use server";
 
-import { ai } from "@/lib/ai/gemini-client";
+import { ai, DEFAULT_GEMINI_MODEL } from "@/lib/ai/gemini-client";
 import { buildQuestionGeneratorSystemPrompt } from "@/lib/ai/prompts/question-generator";
 import { buildTurnResponderPrompt } from "@/lib/ai/prompts/turn-responder";
 import { maskPiiText } from "@/lib/utils/pii-masker";
@@ -69,7 +69,7 @@ Above is the CV (attached as PDF) and the Job Description.
 Analyze them and generate the interview plan now. Remember: respond with ONLY the JSON object, no markdown, no explanation.`;
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.0-flash",
+            model: DEFAULT_GEMINI_MODEL,
             config: { systemInstruction },
             contents: [
                 {
@@ -160,7 +160,7 @@ export async function submitCandidateAnswerTurn(
         });
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.0-flash",
+            model: DEFAULT_GEMINI_MODEL,
             config: { systemInstruction },
             contents: [
                 {
