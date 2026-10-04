@@ -59,13 +59,19 @@ Tất cả AI Agent **TUYỆT ĐỐI KHÔNG ĐƯỢC TỰ Ý THAY ĐỔI** công
 - Luôn định nghĩa rõ ràng interface / type trong `src/types/`.
 - Kết quả trả về từ Gemini AI **phải luôn được validate** (ưu tiên dùng Zod hoặc Typed Schema) trước khi đưa vào Database hoặc render lên giao diện.
 
-### Quy tắc 5: Quy trình Git Commit nghiêm ngặt (Strict Git Workflow)
+### Quy tắc 5: Quy trình Git Workflow & Task Branching nghiêm ngặt (Strict Git Workflow)
+- **Tuyệt đối KHÔNG commit trực tiếp lên nhánh `main`:**
+  - Mọi công việc (tính năng mới, refactor, fix bug) đều BẮT BUỘC thực hiện trên một nhánh (branch) riêng biệt. Nhánh `main` chỉ nhận code thông qua Pull Request sau khi vượt qua toàn bộ CI/CD checks.
+- **Quy tắc tạo nhánh theo Task (Task-based Branching):**
+  - Trước khi bắt đầu một task trong `important_md/TASK_LIST.md`, Agent BẮT BUỘC phải checkout từ `main` mới nhất và tạo branch mới theo đúng quy ước:
+    - Tính năng mới: `task-<id>-<kebab-case-description>` (Ví dụ: `task-04-pii-masking`, `task-05-voice-interaction-hooks`, `task-06-interview-page`)
+    - Sửa lỗi/Hotfix: `fix/task-<id>-<kebab-case-description>` (Ví dụ: `fix/task-04-phone-regex-edgecase`)
 - **Kiểm tra trước khi sửa:** BẮT BUỘC chạy `git status` trước khi thực hiện bất kỳ chỉnh sửa hoặc tạo file mới nào. Nếu còn thay đổi chưa commit, phải commit dứt điểm trước khi làm việc mới.
 - **Commit ngay sau khi làm xong:** Mỗi khi hoàn thành một chỉnh sửa hoặc tạo mới file, BẮT BUỘC chạy commit ngay lập tức.
 - **Chuẩn commit:** Tuân thủ quy chuẩn Conventional Commits và **BẮT BUỘC PHẢI CÓ SCOPE**, viết hoàn toàn bằng tiếng Anh:
   - Cấu trúc: `<type>(<scope>): <description>`
   - Types: `feat`, `fix`, `docs`, `refactor`, `style`, `test`, `chore`.
-  - Scopes ví dụ: `(landing)`, `(interview)`, `(voice)`, `(report)`, `(agent)`, `(nix)`, `(auth)`, `(db)`, `(deps)`.
+  - Scopes ví dụ: `(landing)`, `(interview)`, `(voice)`, `(report)`, `(agent)`, `(ci)`, `(nix)`, `(auth)`, `(db)`, `(deps)`.
   - Ví dụ chuẩn:
     - `feat(landing): add hero section and CTA buttons`
     - `docs(agent): require mandatory scope in conventional commits`
