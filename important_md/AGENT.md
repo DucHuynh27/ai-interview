@@ -66,8 +66,17 @@ Tất cả AI Agent **TUYỆT ĐỐI KHÔNG ĐƯỢC TỰ Ý THAY ĐỔI** công
   - Trước khi bắt đầu một task trong `important_md/TASK_LIST.md`, Agent BẮT BUỘC phải checkout từ `main` mới nhất và tạo branch mới theo đúng quy ước:
     - Tính năng mới: `task-<id>-<kebab-case-description>` (Ví dụ: `task-04-pii-masking`, `task-05-voice-interaction-hooks`, `task-06-interview-page`)
     - Sửa lỗi/Hotfix: `fix/task-<id>-<kebab-case-description>` (Ví dụ: `fix/task-04-phone-regex-edgecase`)
+- **Nguyên tắc Atomic Commits (Bắt buộc commit theo file hoặc nhóm file có cùng logic):**
+  - **TUYỆT ĐỐI CẤM** dùng `git add .` bừa bãi để gom tất cả các thay đổi không liên quan (ví dụ: vừa sửa types, vừa sửa UI, vừa sửa test, vừa sửa docs) vào chung một commit khổng lồ.
+  - **Mỗi commit phải là một đơn vị logic độc lập (Atomic unit):** Chỉ chứa một file hoặc một nhóm file có quan hệ mật thiết với nhau để dễ review, dễ trace bug và dễ `revert` khi cần thiết.
+  - **Chia nhỏ commit theo từng tầng trách nhiệm:**
+    1. *Tầng Định nghĩa Kiểu (Types & Schemas):* `git add src/types/...` $\rightarrow$ `feat(types): define ...`
+    2. *Tầng Logic/Backend/AI:* `git add src/lib/ai/... src/app/actions/...` $\rightarrow$ `feat(evaluator): implement ...`
+    3. *Tầng Giao diện (UI Components):* `git add src/components/...` $\rightarrow$ `feat(report-ui): add ...`
+    4. *Tầng Kiểm thử (Unit/Integration Tests):* `git add src/.../*.test.ts` $\rightarrow$ `test(masker): add test cases for ...`
+    5. *Tầng Tài liệu & Cấu hình:* `git add important_md/... .github/...` $\rightarrow$ `docs(agent): ...` hoặc `ci(github): ...`
 - **Kiểm tra trước khi sửa:** BẮT BUỘC chạy `git status` trước khi thực hiện bất kỳ chỉnh sửa hoặc tạo file mới nào. Nếu còn thay đổi chưa commit, phải commit dứt điểm trước khi làm việc mới.
-- **Commit ngay sau khi làm xong:** Mỗi khi hoàn thành một chỉnh sửa hoặc tạo mới file, BẮT BUỘC chạy commit ngay lập tức.
+- **Commit ngay sau khi làm xong từng file/nhóm file:** Mỗi khi hoàn thành một chỉnh sửa có ý nghĩa trọn vẹn ở một file hoặc cụm file liên quan, BẮT BUỘC chạy commit ngay lập tức thay vì dồn lại cuối buổi.
 - **Chuẩn commit:** Tuân thủ quy chuẩn Conventional Commits và **BẮT BUỘC PHẢI CÓ SCOPE**, viết hoàn toàn bằng tiếng Anh:
   - Cấu trúc: `<type>(<scope>): <description>`
   - Types: `feat`, `fix`, `docs`, `refactor`, `style`, `test`, `chore`.

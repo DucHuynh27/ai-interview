@@ -1,48 +1,64 @@
-import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import type { QuestionFeedbackItem } from "@/types/report";
 import type { QuestionCategory } from "@/types/interview";
+import type { QuestionFeedbackItem } from "@/types/report";
 import {
+    AlertTriangle,
+    Check,
     CheckCircle2,
     ChevronDown,
     ChevronUp,
+    Copy,
+    Crown,
     User,
-    AlertTriangle,
-    Lightbulb,
 } from "lucide-react";
+import { useState } from "react";
 
 interface QuestionFeedbackCardProps {
     feedback: QuestionFeedbackItem;
     defaultOpen?: boolean;
 }
 
-const CATEGORY_MAP: Record<QuestionCategory, { label: string; color: string }> = {
-    WARM_UP: {
-        label: "Khởi động",
-        color: "bg-sky-500/10 text-sky-400 border-sky-500/20",
-    },
-    BEHAVIORAL_STAR: {
-        label: "STAR Hành vi",
-        color: "bg-violet-500/10 text-violet-400 border-violet-500/20",
-    },
-    ROLE_SPECIFIC: {
-        label: "Chuyên môn",
-        color: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    },
-    SITUATIONAL: {
-        label: "Tình huống",
-        color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    },
-};
+const CATEGORY_MAP: Record<QuestionCategory, { label: string; color: string }> =
+    {
+        WARM_UP: {
+            label: "Khởi động",
+            color: "bg-sky-500/10 text-sky-400 border-sky-500/20",
+        },
+        BEHAVIORAL_STAR: {
+            label: "STAR Hành vi",
+            color: "bg-violet-500/10 text-violet-400 border-violet-500/20",
+        },
+        ROLE_SPECIFIC: {
+            label: "Chuyên môn",
+            color: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+        },
+        SITUATIONAL: {
+            label: "Tình huống",
+            color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+        },
+    };
 
 export function QuestionFeedbackCard({
     feedback,
     defaultOpen = false,
 }: QuestionFeedbackCardProps) {
     const [isOpen, setIsOpen] = useState(defaultOpen);
+    const [copied, setCopied] = useState(false);
 
-    const categoryMeta = CATEGORY_MAP[feedback.category] ?? CATEGORY_MAP.BEHAVIORAL_STAR;
+    const handleCopy = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            await navigator.clipboard.writeText(feedback.suggestedAnswer);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // ignore
+        }
+    };
+
+    const categoryMeta =
+        CATEGORY_MAP[feedback.category] ?? CATEGORY_MAP.BEHAVIORAL_STAR;
 
     const starScores = [
         { label: "S (Situation)", score: feedback.situationScore },
@@ -119,7 +135,10 @@ export function QuestionFeedbackCard({
                             <span>Câu trả lời của bạn:</span>
                         </div>
                         <p className="mt-2 text-xs sm:text-sm leading-relaxed text-zinc-200 italic">
-                            &ldquo;{feedback.candidateAnswer || "(Ứng viên không có câu trả lời)"}&rdquo;
+                            &ldquo;
+                            {feedback.candidateAnswer ||
+                                "(Ứng viên không có câu trả lời)"}
+                            &rdquo;
                         </p>
                     </div>
 
@@ -148,8 +167,13 @@ export function QuestionFeedbackCard({
                             </div>
                             <ul className="mt-2 space-y-1.5 text-xs text-zinc-300">
                                 {feedback.strengths.map((str, i) => (
-                                    <li key={i} className="flex items-start gap-1.5">
-                                        <span className="text-emerald-400">•</span>
+                                    <li
+                                        key={i}
+                                        className="flex items-start gap-1.5"
+                                    >
+                                        <span className="text-emerald-400">
+                                            •
+                                        </span>
                                         <span>{str}</span>
                                     </li>
                                 ))}
@@ -164,8 +188,13 @@ export function QuestionFeedbackCard({
                             </div>
                             <ul className="mt-2 space-y-1.5 text-xs text-zinc-300">
                                 {feedback.weaknesses.map((w, i) => (
-                                    <li key={i} className="flex items-start gap-1.5">
-                                        <span className="text-amber-400">•</span>
+                                    <li
+                                        key={i}
+                                        className="flex items-start gap-1.5"
+                                    >
+                                        <span className="text-amber-400">
+                                            •
+                                        </span>
                                         <span>{w}</span>
                                     </li>
                                 ))}
@@ -173,14 +202,37 @@ export function QuestionFeedbackCard({
                         </div>
                     </div>
 
-                    {/* Suggested Refinement */}
+                    {/* Khung Câu trả lời mẫu điểm 10 chuẩn STAR */}
                     {feedback.suggestedAnswer && (
-                        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-400">
-                                <Lightbulb className="size-4" />
-                                Gợi ý câu trả lời tối ưu theo chuẩn STAR:
+                        <div className="rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-zinc-900/90 to-zinc-900/90 p-4 shadow-sm">
+                            <div className="flex items-center justify-between gap-2 border-b border-amber-500/20 pb-2.5">
+                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
+                                    <Crown className="size-4" />
+                                    <span>
+                                        Câu trả lời mẫu điểm 10 (Chuẩn STAR):
+                                    </span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleCopy}
+                                    className="flex items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[11px] font-semibold text-amber-300 transition-colors hover:bg-amber-500/20 hover:text-amber-200"
+                                >
+                                    {copied ? (
+                                        <>
+                                            <Check className="size-3 text-emerald-400" />
+                                            <span className="text-emerald-400">
+                                                Đã chép
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="size-3" />
+                                            <span>Sao chép</span>
+                                        </>
+                                    )}
+                                </button>
                             </div>
-                            <p className="mt-2 text-xs sm:text-sm leading-relaxed text-zinc-200">
+                            <p className="mt-3 text-xs sm:text-sm leading-relaxed text-zinc-200">
                                 {feedback.suggestedAnswer}
                             </p>
                         </div>
