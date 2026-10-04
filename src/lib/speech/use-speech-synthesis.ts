@@ -3,17 +3,11 @@
 import type { LanguageCode, PersonaType } from "@/types/interview";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// ─── Ambient type shims for Web Speech Synthesis API ─────────────────────────
-// The typings shipped with TypeScript's lib.dom.d.ts cover SpeechSynthesis,
-// but the `voiceschanged` event and some Chrome-specific quirks need care.
-
 const TTS_LANG_MAP: Record<LanguageCode, string> = {
     vi: "vi-VN",
     en: "en-US",
 };
 
-// Persona-tuned prosody: challenging_manager speaks faster and lower-pitched
-// to project authority; tech_lead is measured; friendly_hr is warm and natural.
 const PERSONA_PROSODY: Record<
     PersonaType,
     { rate: number; pitch: number; volume: number }
@@ -23,9 +17,11 @@ const PERSONA_PROSODY: Record<
     tech_lead: { rate: 0.97, pitch: 1.0, volume: 1 },
 };
 
-// ─── Public API ───────────────────────────────────────────────────────────────
-
-export type SpeechSynthesisStatus = "idle" | "speaking" | "paused" | "unsupported";
+export type SpeechSynthesisStatus =
+    | "idle"
+    | "speaking"
+    | "paused"
+    | "unsupported";
 
 interface UseSpeechSynthesisOptions {
     language: LanguageCode;
@@ -42,19 +38,145 @@ interface UseSpeechSynthesisReturn {
     toggleMute: () => void;
 }
 
+function splitTextIntoTtsChunks(text: string, maxLen = 160): string[] {
+    const sentences = text.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g) || [text];
+    const chunks: string[] = [];
+    let current = "";
+
+    for (const s of sentences) {
+        if ((current + " " + s).trim().length <= maxLen) {
+            current = (current + " " + s).trim();
+        } else {
+            if (current) chunks.push(current);
+            if (s.length > maxLen) {
+                const words = s.split(" ");
+                let sub = "";
+                for (const w of words) {
+                    if ((sub + " " + w).trim().length <= maxLen) {
+                        sub = (sub + " " + w).trim();
+                    } else {
+                        if (sub) chunks.push(sub);
+                        sub = w;
+                    }
+                }
+                current = sub;
+            } else {
+                current = s.trim();
+            }
+        }
+    }
+    if (current) chunks.push(current);
+    return chunks;
+}
+
+function playAudioChunks(
+    chunks: string[],
+    lang: string,
+    onStart: () => void,
+    onEnd: () => void,
+    onError: () => void,
+): { cancel: () => void } {
+    let currentIndex = 0;
+    let isCancelled = false;
+    let currentAudio: HTMLAudioElement | null = null;
+
+    onStart();
+
+    function playNext() {
+        if (isCancelled) return;
+        if (currentIndex >= chunks.length) {
+            onEnd();
+            return;
+        }
+
+        const chunk = chunks[currentIndex];
+        currentIndex++;
+
+        const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(lang)}&client=tw-ob&q=${encodeURIComponent(chunk)}`;
+        currentAudio = new Audio(url);
+
+        currentAudio.onended = () => {
+            if (!isCancelled) playNext();
+        };
+        currentAudio.onerror = () => {
+            if (!isCancelled) {
+                onEnd();
+            }
+        };
+
+        currentAudio.play().catch(() => {
+            if (!isCancelled) onError();
+        });
+    }
+
+    playNext();
+
+    return {
+        cancel: () => {
+            isCancelled = true;
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+        },
+    };
+}
+
 function pickBestVoice(
     voices: SpeechSynthesisVoice[],
     lang: string,
 ): SpeechSynthesisVoice | null {
-    // Prefer an exact locale match that is "local" (not remote/network)
-    const exact = voices.filter((v) => v.lang === lang);
-    const local = exact.find((v) => v.localService);
-    if (local) return local;
-    if (exact.length > 0) return exact[0];
+    if (!voices || voices.length === 0) return null;
 
-    // Fallback: match language prefix only (e.g. "vi" from "vi-VN")
-    const prefix = lang.split("-")[0];
-    return voices.find((v) => v.lang.startsWith(prefix)) ?? null;
+    const targetLang = lang.toLowerCase().replace(/_/g, "-");
+    const targetPrefix = targetLang.split("-")[0];
+
+    // Priority 1: Exact locale match (e.g. "vi-VN" or "vi-vn")
+    const exact = voices.filter(
+        (v) => v.lang.toLowerCase().replace(/_/g, "-") === targetLang,
+    );
+    if (exact.length > 0) {
+        const naturalVoice = exact.find(
+            (v) =>
+                v.name.includes("Natural") ||
+                v.name.includes("Google") ||
+                v.name.includes("Online") ||
+                v.name.includes("HoaiMy") ||
+                v.name.includes("NamMinh") ||
+                v.name.includes("Linh") ||
+                v.name.includes("An"),
+        );
+        return naturalVoice || exact[0];
+    }
+
+    // Priority 2: Language prefix match (e.g. "vi")
+    const prefixMatches = voices.filter((v) =>
+        v.lang.toLowerCase().replace(/_/g, "-").startsWith(targetPrefix),
+    );
+    if (prefixMatches.length > 0) {
+        const naturalVoice = prefixMatches.find(
+            (v) =>
+                v.name.includes("Natural") ||
+                v.name.includes("Google") ||
+                v.name.includes("Online") ||
+                v.name.includes("HoaiMy") ||
+                v.name.includes("NamMinh"),
+        );
+        return naturalVoice || prefixMatches[0];
+    }
+
+    // Priority 3: Name match containing "vietnam" or "tiếng việt"
+    const nameMatch = voices.find((v) => {
+        const nameLower = v.name.toLowerCase();
+        return (
+            nameLower.includes("vietnam") ||
+            nameLower.includes("tiếng việt") ||
+            nameLower.includes("vietnamese")
+        );
+    });
+    if (nameMatch) return nameMatch;
+
+    return null;
 }
 
 export function useSpeechSynthesis({
@@ -68,12 +190,12 @@ export function useSpeechSynthesis({
     const lastTextRef = useRef<string>("");
     const pendingEndRef = useRef<(() => void) | undefined>(undefined);
     const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+    const audioControllerRef = useRef<{ cancel: () => void } | null>(null);
 
     const synth =
         typeof window !== "undefined" ? window.speechSynthesis : null;
     const isSupported = synth !== null;
 
-    // ─── Load voices (Chrome fires voiceschanged async, Firefox syncs) ─────
     useEffect(() => {
         if (!synth) return;
 
@@ -91,19 +213,20 @@ export function useSpeechSynthesis({
         synth?.cancel();
         utteranceRef.current = null;
         pendingEndRef.current = undefined;
+        if (audioControllerRef.current) {
+            audioControllerRef.current.cancel();
+            audioControllerRef.current = null;
+        }
         setStatus("idle");
     }, [synth]);
 
     const speak = useCallback(
-        (text: string, onEnd?: () => void) => {
-            if (!synth || !text.trim()) return;
+        async (text: string, onEnd?: () => void) => {
+            if (!text.trim()) return;
 
-            // Cancel any in-progress speech before starting new
-            synth.cancel();
+            cancel();
 
             if (isMuted) {
-                // When muted, skip TTS but still fire the completion callback so
-                // the interview flow can advance normally.
                 onEnd?.();
                 return;
             }
@@ -111,16 +234,72 @@ export function useSpeechSynthesis({
             lastTextRef.current = text;
             pendingEndRef.current = onEnd;
 
+            let availableVoices =
+                voices.length > 0 ? voices : (synth?.getVoices() ?? []);
+
+            if (synth && availableVoices.length === 0) {
+                availableVoices = await new Promise<SpeechSynthesisVoice[]>(
+                    (resolve) => {
+                        let timer: ReturnType<typeof setTimeout> | null = null;
+                        const onVoices = () => {
+                            if (timer) clearTimeout(timer);
+                            synth.removeEventListener("voiceschanged", onVoices);
+                            const updated = synth.getVoices();
+                            setVoices(updated);
+                            resolve(updated);
+                        };
+                        synth.addEventListener("voiceschanged", onVoices);
+                        timer = setTimeout(() => {
+                            synth.removeEventListener("voiceschanged", onVoices);
+                            resolve(synth.getVoices() ?? []);
+                        }, 250);
+                    },
+                );
+            }
+
+            const targetLang = TTS_LANG_MAP[language];
+            const bestVoice = pickBestVoice(availableVoices, targetLang);
+
+            // If Vietnamese is chosen and no Vietnamese voice exists on this device/browser,
+            // fall back to clean native Google TTS audio so the English voice never reads Vietnamese.
+            if (language === "vi" && !bestVoice) {
+                const chunks = splitTextIntoTtsChunks(text);
+                audioControllerRef.current = playAudioChunks(
+                    chunks,
+                    "vi",
+                    () => setStatus("speaking"),
+                    () => {
+                        setStatus("idle");
+                        audioControllerRef.current = null;
+                        const cb = pendingEndRef.current;
+                        pendingEndRef.current = undefined;
+                        cb?.();
+                    },
+                    () => {
+                        setStatus("idle");
+                        audioControllerRef.current = null;
+                    },
+                );
+                return;
+            }
+
+            if (!synth) {
+                onEnd?.();
+                return;
+            }
+
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = TTS_LANG_MAP[language];
+            utterance.lang = targetLang;
 
             const prosody = PERSONA_PROSODY[persona];
             utterance.rate = prosody.rate;
             utterance.pitch = prosody.pitch;
             utterance.volume = prosody.volume;
 
-            const bestVoice = pickBestVoice(voices, TTS_LANG_MAP[language]);
-            if (bestVoice) utterance.voice = bestVoice;
+            if (bestVoice) {
+                utterance.voice = bestVoice;
+                utterance.lang = bestVoice.lang;
+            }
 
             utterance.onstart = () => setStatus("speaking");
             utterance.onend = () => {
@@ -131,7 +310,6 @@ export function useSpeechSynthesis({
                 cb?.();
             };
             utterance.onerror = (e) => {
-                // "interrupted" fires when cancel() is called deliberately — not an error.
                 if (e.error === "interrupted") return;
                 setStatus("idle");
                 utteranceRef.current = null;
@@ -141,7 +319,7 @@ export function useSpeechSynthesis({
             utteranceRef.current = utterance;
             synth.speak(utterance);
         },
-        [synth, language, persona, voices, isMuted],
+        [synth, language, persona, voices, isMuted, cancel],
     );
 
     const replay = useCallback(() => {
@@ -153,21 +331,17 @@ export function useSpeechSynthesis({
     const toggleMute = useCallback(() => {
         setIsMuted((prev) => {
             if (!prev) {
-                // Muting mid-speech: cancel immediately
-                synth?.cancel();
-                setStatus("idle");
+                cancel();
             }
             return !prev;
         });
-    }, [synth]);
+    }, [cancel]);
 
-    // Cleanup on unmount
     useEffect(() => {
         return () => {
-            synth?.cancel();
+            cancel();
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [cancel]);
 
     return {
         status: !isSupported ? "unsupported" : status,
