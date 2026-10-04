@@ -2,6 +2,8 @@
 
 import { submitCandidateAnswerTurn } from "@/app/actions/interview";
 import { PREVIEW_SESSION_KEY } from "@/components/interview/SetupForm";
+import { MicButton } from "@/components/voice/MicButton";
+import { useSpeechRecognition } from "@/lib/speech/use-speech-recognition";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import type {
@@ -209,7 +211,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
     const [showTranscriptModal, setShowTranscriptModal] = useState(false);
 
     // ─── Room Controls & Hardware ─────────────────────────────────────────────
-    const [isMicOn, setIsMicOn] = useState(true);
+    const [isMicOn, setIsMicOn] = useState(false);
     const [isCameraOn, setIsCameraOn] = useState(true);
     const [showCaptions, setShowCaptions] = useState(true);
     const [showBilingual, setShowBilingual] = useState(false);
@@ -226,6 +228,30 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
     // ─── Candidate Camera Video Feed ──────────────────────────────────────────
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+
+    // ─── Speech-to-Text (Web Speech API) ─────────────────────────────────────
+    const { status: sttStatus, audioLevel, start: startListening, stop: stopListening } =
+        useSpeechRecognition({
+            language: sessionData.language,
+            onTranscriptChange: (partialText) => {
+                setDraftAnswers((prev) => ({ ...prev, [currentQuestionIndex]: partialText }));
+                if (aiState !== "listening") setAiState("listening");
+            },
+            onFinalResult: (finalText) => {
+                setDraftAnswers((prev) => ({ ...prev, [currentQuestionIndex]: finalText }));
+                setIsMicOn(false);
+            },
+        });
+
+    const handleMicToggle = useCallback(() => {
+        if (sttStatus === "listening") {
+            stopListening();
+            setIsMicOn(false);
+        } else {
+            startListening();
+            setIsMicOn(true);
+        }
+    }, [sttStatus, startListening, stopListening]);
 
     // Load session data and previous transcripts from sessionStorage
     useEffect(() => {
@@ -1036,7 +1062,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                             </div>
                                         )}
 
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex items-center justify-between gap-2">
                                             <div className="flex items-center gap-2 text-[11px] text-zinc-400">
                                                 <span className="hidden sm:inline">
                                                     Phím tắt:
@@ -1050,32 +1076,42 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                                 <span>{wordCount} từ</span>
                                             </div>
 
-                                            <button
-                                                type="button"
-                                                onClick={handleSubmitAnswer}
-                                                disabled={
-                                                    isPendingSubmit ||
-                                                    currentDraftAnswer.trim()
-                                                        .length === 0
-                                                }
-                                                className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
-                                            >
-                                                {isPendingSubmit ? (
-                                                    <>
-                                                        <Sparkles className="size-3.5 animate-spin" />
-                                                        <span>
-                                                            AI đang suy nghĩ...
-                                                        </span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <span>
-                                                            Gửi câu trả lời
-                                                        </span>
-                                                        <Send className="size-3.5" />
-                                                    </>
-                                                )}
-                                            </button>
+                                            <div className="flex items-center gap-3">
+                                                <MicButton
+                                                    status={sttStatus}
+                                                    audioLevel={audioLevel}
+                                                    onToggle={handleMicToggle}
+                                                    disabled={isPendingSubmit}
+                                                    language={sessionData.language}
+                                                />
+
+                                                <button
+                                                    type="button"
+                                                    onClick={handleSubmitAnswer}
+                                                    disabled={
+                                                        isPendingSubmit ||
+                                                        currentDraftAnswer.trim()
+                                                            .length === 0
+                                                    }
+                                                    className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                                >
+                                                    {isPendingSubmit ? (
+                                                        <>
+                                                            <Sparkles className="size-3.5 animate-spin" />
+                                                            <span>
+                                                                AI đang suy nghĩ...
+                                                            </span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span>
+                                                                Gửi câu trả lời
+                                                            </span>
+                                                            <Send className="size-3.5" />
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
