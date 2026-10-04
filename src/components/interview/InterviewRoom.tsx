@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { MicButton } from "@/components/voice/MicButton";
 import { useSpeechRecognition } from "@/lib/speech/use-speech-recognition";
+import { useSpeechSynthesis } from "@/lib/speech/use-speech-synthesis";
 import type {
     CandidateAnswerSubmission,
     InterviewQuestion,
@@ -45,6 +46,7 @@ import {
     Video,
     VideoOff,
     Volume2,
+    VolumeX,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
@@ -262,6 +264,68 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
             setIsMicOn(true);
         }
     }, [sttStatus, startListening, stopListening]);
+
+    // ─── Text-to-Speech (Web Speech Synthesis) ────────────────────────────────
+    const {
+        isMuted: isTtsMuted,
+        speak,
+        cancel: cancelSpeech,
+        replay: replayQuestion,
+        toggleMute: toggleTtsMute,
+    } = useSpeechSynthesis({
+        language: sessionData.language,
+        persona: sessionData.persona,
+    });
+
+    // Track which question index has already been read aloud to avoid re-firing
+    // on unrelated re-renders (e.g. countdown ticks, transcript updates).
+    const spokenQuestionIndexRef = useRef<number>(-1);
+
+    // Auto-speak the current question whenever the index advances
+    useEffect(() => {
+        if (isSessionCompleted) return;
+        if (spokenQuestionIndexRef.current === currentQuestionIndex) return;
+
+        // Only speak when it is AI's turn (entering a new question)
+        if (aiState !== "speaking") return;
+
+        // Guard: questions may not be loaded yet on first hydration tick
+        const sessionQuestions =
+            sessionData.data.questions || MOCK_QUESTIONS;
+        const question = sessionQuestions[currentQuestionIndex];
+        if (!question) return;
+
+        spokenQuestionIndexRef.current = currentQuestionIndex;
+
+        const questionText =
+            sessionData.language === "en"
+                ? question.questionEn
+                : question.questionVi;
+
+        speak(questionText, () => {
+            // After AI finishes reading, flip state so candidate can answer
+            setAiState("listening");
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentQuestionIndex, aiState, isSessionCompleted, sessionData]);
+
+    // Auto-speak AI feedback after each submitted answer
+    const prevFeedbackRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (!activeTurnFeedback) return;
+        if (activeTurnFeedback.fullResponse === prevFeedbackRef.current) return;
+
+        prevFeedbackRef.current = activeTurnFeedback.fullResponse;
+        speak(activeTurnFeedback.fullResponse);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTurnFeedback]);
+
+    // Cancel TTS whenever the candidate starts typing or speaking (mic on)
+    useEffect(() => {
+        if (isMicOn || aiState === "listening") {
+            cancelSpeech();
+        }
+    }, [isMicOn, aiState, cancelSpeech]);
 
     // Load session data and previous transcripts from sessionStorage
     useEffect(() => {
@@ -1278,6 +1342,34 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                             <Video className="size-5" />
                         ) : (
                             <VideoOff className="size-5" />
+                        )}
+                    </button>
+
+                    {/* AI Voice: Replay question */}
+                    <button
+                        type="button"
+                        onClick={replayQuestion}
+                        className="hidden sm:flex size-11 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-900 text-zinc-100 transition-all hover:bg-zinc-800"
+                        title="Nghe lại câu hỏi"
+                    >
+                        <Volume2 className="size-5" />
+                    </button>
+
+                    {/* AI Voice: Mute/Unmute toggle */}
+                    <button
+                        type="button"
+                        onClick={toggleTtsMute}
+                        className={`flex size-11 items-center justify-center rounded-2xl border transition-all ${
+                            isTtsMuted
+                                ? "border-rose-500/50 bg-rose-500/20 text-rose-300 hover:bg-rose-500/30"
+                                : "border-zinc-700 bg-zinc-900 text-zinc-100 hover:bg-zinc-800"
+                        }`}
+                        title={isTtsMuted ? "Bật giọng AI" : "Tắt giọng AI"}
+                    >
+                        {isTtsMuted ? (
+                            <VolumeX className="size-5" />
+                        ) : (
+                            <Volume2 className="size-5" />
                         )}
                     </button>
 
