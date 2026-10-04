@@ -1,6 +1,6 @@
 "use server";
 
-import { ai } from "@/lib/ai/gemini-client";
+import { ai, DEFAULT_GEMINI_MODEL } from "@/lib/ai/gemini-client";
 import { buildStarEvaluatorPrompt } from "@/lib/ai/prompts/star-evaluator";
 import { maskPiiText } from "@/lib/utils/pii-masker";
 import type {
@@ -85,7 +85,7 @@ export async function evaluateInterviewSession(
         buildStarEvaluatorPrompt(sanitizedPayload);
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: DEFAULT_GEMINI_MODEL,
         config: { systemInstruction },
         contents: [
             {
