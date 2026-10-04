@@ -12,8 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type {
-    GenerateQuestionsResult,
-    LanguageCode,
+    InterviewSessionData,
     PersonaType,
     QuestionCategory,
 } from "@/types/interview";
@@ -30,17 +29,10 @@ import {
     TriangleAlert,
 } from "lucide-react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-// ─── Local types ──────────────────────────────────────────────────────────────
-
-interface PreviewPayload {
-    sessionId: string;
-    persona: PersonaType;
-    language: LanguageCode;
-    data: GenerateQuestionsResult;
-}
+type PreviewPayload = InterviewSessionData;
 
 // ─── Static maps ─────────────────────────────────────────────────────────────
 
@@ -86,7 +78,6 @@ const CATEGORY_COLORS: Record<QuestionCategory, string> = {
 
 export default function InterviewPreviewPage() {
     const { id: sessionId } = useParams<{ id: string }>();
-    const router = useRouter();
 
     const [payload, setPayload] = useState<PreviewPayload | null>(null);
     const [loadError, setLoadError] = useState(false);
@@ -96,16 +87,18 @@ export default function InterviewPreviewPage() {
             `${PREVIEW_SESSION_KEY}:${sessionId}`,
         );
 
-        if (!raw) {
-            setLoadError(true);
-            return;
-        }
+        queueMicrotask(() => {
+            if (!raw) {
+                setLoadError(true);
+                return;
+            }
 
-        try {
-            setPayload(JSON.parse(raw) as PreviewPayload);
-        } catch {
-            setLoadError(true);
-        }
+            try {
+                setPayload(JSON.parse(raw) as PreviewPayload);
+            } catch {
+                setLoadError(true);
+            }
+        });
     }, [sessionId]);
 
     if (loadError) {

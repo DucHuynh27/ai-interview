@@ -44,3 +44,10 @@ export interface GenerateQuestionsResult {
     summary: InterviewSummary;
     questions: InterviewQuestion[];
 }
+
+export interface InterviewSessionData {
+    sessionId: string;
+    persona: PersonaType;
+    language: LanguageCode;
+    data: GenerateQuestionsResult;
+}
