@@ -12,7 +12,7 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 | **Sprint 1** | Khởi Tạo Nền Tảng & Setup UI | Dựng khung Next.js 15, UI Upload CV PDF & PII Masking       |   ✅ Hoàn thành   |  100%   |
 | **Sprint 2** | Não Bộ AI (Gemini 2.0 Flash) | Parse PDF CV, đối soát JD, sinh 5 câu hỏi STAR & Persona    |   ✅ Hoàn thành   |  100%   |
 | **Sprint 3** | Phòng Phỏng Vấn Giọng Nói    | Turn-based Voice (Web Speech STT & TTS), Waveform UI        |   ✅ Hoàn thành   |  100%   |
-| **Sprint 4** | Đánh Giá STAR & Báo Cáo      | Chấm điểm Situation, Task, Action, Result & Câu mẫu điểm 10 |   Chưa bắt đầu    |   0%    |
+| **Sprint 4** | Đánh Giá STAR & Báo Cáo      | Chấm điểm Situation, Task, Action, Result & Câu mẫu điểm 10 | 🔄 Đang thực hiện |   33%   |
 | **Sprint 5** | Database, Auth & Pitching    | Google Login, Cloud Database, Dashboard lịch sử & Demo deck |   Chưa bắt đầu    |   0%    |
 
 ---
@@ -72,7 +72,7 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 
 ### SPRINT 4: Đánh Giá STAR & Báo Cáo Chuyên Sâu (Tuần 8 - Tuần 10)
 
-- [ ] **Task 4.1:** Xây dựng Engine chấm điểm STAR trên Gemini (`evaluateInterviewSession`):
+- [x] **Task 4.1:** Xây dựng Engine chấm điểm STAR trên Gemini (`evaluateInterviewSession`):
     - _Files:_ `src/lib/ai/prompts/star-evaluator.ts`, `src/app/actions/report.ts`.
     - _Tiêu chuẩn hoàn thành (DoD):_ Đọc toàn bộ Transcript buổi phỏng vấn, tính điểm 4 tiêu chí STAR (1-10), điểm tổng quan (1-100), chỉ ra điểm mạnh/yếu cụ thể cho từng câu.
 - [ ] **Task 4.2:** Thiết kế Giao diện Báo cáo kết quả (`/interview/[id]/result`):
