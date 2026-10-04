@@ -4,13 +4,18 @@ import {
     submitCandidateAnswerTurn,
 } from "./interview";
 
+const { mockGenerateContent } = vi.hoisted(() => ({
+    mockGenerateContent: vi.fn(),
+}));
+
 vi.mock("@/lib/ai/gemini-client", () => ({
     ai: {
         models: {
-            generateContent: vi.fn(),
+            generateContent: mockGenerateContent,
         },
     },
     DEFAULT_GEMINI_MODEL: "gemini-3.8-flash",
+    generateContentWithFallback: (args: unknown) => mockGenerateContent(args),
 }));
 
 import { ai, DEFAULT_GEMINI_MODEL } from "@/lib/ai/gemini-client";
