@@ -8,6 +8,7 @@ vi.mock("@/lib/ai/gemini-client", () => ({
             generateContent: vi.fn(),
         },
     },
+    DEFAULT_GEMINI_MODEL: "gemini-3.8-flash",
 }));
 
 import { ai } from "@/lib/ai/gemini-client";
