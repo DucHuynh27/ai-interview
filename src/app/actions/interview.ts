@@ -1,6 +1,9 @@
 "use server";
 
-import { ai, DEFAULT_GEMINI_MODEL } from "@/lib/ai/gemini-client";
+import {
+    DEFAULT_GEMINI_MODEL,
+    generateContentWithFallback,
+} from "@/lib/ai/gemini-client";
 import { buildQuestionGeneratorSystemPrompt } from "@/lib/ai/prompts/question-generator";
 import { buildTurnResponderPrompt } from "@/lib/ai/prompts/turn-responder";
 import { maskPiiText } from "@/lib/utils/pii-masker";
@@ -68,7 +71,7 @@ ${sanitizedJd}
 Above is the CV (attached as PDF) and the Job Description.
 Analyze them and generate the interview plan now. Remember: respond with ONLY the JSON object, no markdown, no explanation.`;
 
-        const response = await ai.models.generateContent({
+        const response = await generateContentWithFallback({
             model: DEFAULT_GEMINI_MODEL,
             config: { systemInstruction },
             contents: [
@@ -113,11 +116,18 @@ Analyze them and generate the interview plan now. Remember: respond with ONLY th
 
         return { ok: true, data: validated.data };
     } catch (err: unknown) {
-        const message =
+        const rawMessage =
             err instanceof Error ? err.message : "Lỗi hệ thống máy chủ.";
+        const friendlyMessage =
+            rawMessage.includes("503") ||
+            rawMessage.includes("UNAVAILABLE") ||
+            rawMessage.includes("high demand") ||
+            rawMessage.includes("429")
+                ? "Máy chủ AI hiện đang chịu tải cao tạm thời. Vui lòng bấm thử lại sau giây lát."
+                : rawMessage;
         return {
             ok: false,
-            error: `Không thể kết nối AI: ${message}`,
+            error: `Không thể kết nối AI: ${friendlyMessage}`,
         };
     }
 }
@@ -159,7 +169,7 @@ export async function submitCandidateAnswerTurn(
             isFinalQuestion: submission.isFinalQuestion,
         });
 
-        const response = await ai.models.generateContent({
+        const response = await generateContentWithFallback({
             model: DEFAULT_GEMINI_MODEL,
             config: { systemInstruction },
             contents: [
@@ -212,11 +222,18 @@ export async function submitCandidateAnswerTurn(
             },
         };
     } catch (err: unknown) {
-        const message =
+        const rawMessage =
             err instanceof Error ? err.message : "Lỗi kết nối máy chủ AI.";
+        const friendlyMessage =
+            rawMessage.includes("503") ||
+            rawMessage.includes("UNAVAILABLE") ||
+            rawMessage.includes("high demand") ||
+            rawMessage.includes("429")
+                ? "Máy chủ AI hiện đang chịu tải cao tạm thời. Vui lòng bấm thử lại sau giây lát."
+                : rawMessage;
         return {
             ok: false,
-            error: `Lỗi kết nối AI: ${message}`,
+            error: `Lỗi kết nối AI: ${friendlyMessage}`,
         };
     }
 }

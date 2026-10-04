@@ -2,13 +2,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { evaluateInterviewSession } from "./report";
 import type { EvaluateSessionPayload } from "@/types/report";
 
+const { mockGenerateContent } = vi.hoisted(() => ({
+    mockGenerateContent: vi.fn(),
+}));
+
 vi.mock("@/lib/ai/gemini-client", () => ({
     ai: {
         models: {
-            generateContent: vi.fn(),
+            generateContent: mockGenerateContent,
         },
     },
     DEFAULT_GEMINI_MODEL: "gemini-3.8-flash",
+    generateContentWithFallback: (args: unknown) => mockGenerateContent(args),
 }));
 
 import { ai } from "@/lib/ai/gemini-client";

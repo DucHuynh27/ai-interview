@@ -3,6 +3,8 @@ import { GoogleGenAI } from "@google/genai";
 export const DEFAULT_GEMINI_MODEL =
     process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
+export const FALLBACK_GEMINI_MODEL = "gemini-3.5-flash-lite";
+
 let _aiInstance: GoogleGenAI | null = null;
 
 export function getAiClient(): GoogleGenAI | null {
@@ -33,3 +35,44 @@ export const ai = new Proxy({} as GoogleGenAI, {
         return (client as unknown as Record<string | symbol, unknown>)[prop];
     },
 });
+
+export type GenerateContentParams = Parameters<
+    GoogleGenAI["models"]["generateContent"]
+>[0];
+
+export async function generateContentWithFallback(
+    params: GenerateContentParams,
+) {
+    const primaryModel = params.model || DEFAULT_GEMINI_MODEL;
+    const modelsToTry = [primaryModel, FALLBACK_GEMINI_MODEL].filter(
+        (m, idx, arr) => arr.indexOf(m) === idx,
+    );
+
+    let lastError: unknown = null;
+
+    for (let i = 0; i < modelsToTry.length; i++) {
+        const model = modelsToTry[i];
+        try {
+            return await ai.models.generateContent({
+                ...params,
+                model,
+            });
+        } catch (err: unknown) {
+            lastError = err;
+            const errStr = String(err instanceof Error ? err.message : err);
+            const isOverloaded =
+                errStr.includes("503") ||
+                errStr.includes("UNAVAILABLE") ||
+                errStr.includes("high demand") ||
+                errStr.includes("429") ||
+                errStr.includes("RESOURCE_EXHAUSTED");
+
+            if (isOverloaded && i < modelsToTry.length - 1) {
+                continue;
+            }
+            throw err;
+        }
+    }
+
+    throw lastError;
+}

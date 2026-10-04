@@ -1,6 +1,9 @@
 "use server";
 
-import { ai, DEFAULT_GEMINI_MODEL } from "@/lib/ai/gemini-client";
+import {
+    DEFAULT_GEMINI_MODEL,
+    generateContentWithFallback,
+} from "@/lib/ai/gemini-client";
 import { buildStarEvaluatorPrompt } from "@/lib/ai/prompts/star-evaluator";
 import { maskPiiText } from "@/lib/utils/pii-masker";
 import type {
@@ -84,7 +87,7 @@ export async function evaluateInterviewSession(
     const { systemInstruction, userPrompt } =
         buildStarEvaluatorPrompt(sanitizedPayload);
 
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithFallback({
         model: DEFAULT_GEMINI_MODEL,
         config: { systemInstruction },
         contents: [
