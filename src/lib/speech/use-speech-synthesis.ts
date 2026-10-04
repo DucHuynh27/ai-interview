@@ -38,143 +38,68 @@ interface UseSpeechSynthesisReturn {
     toggleMute: () => void;
 }
 
-function splitTextIntoTtsChunks(text: string, maxLen = 160): string[] {
-    const sentences = text.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g) || [text];
-    const chunks: string[] = [];
-    let current = "";
-
-    for (const s of sentences) {
-        if ((current + " " + s).trim().length <= maxLen) {
-            current = (current + " " + s).trim();
-        } else {
-            if (current) chunks.push(current);
-            if (s.length > maxLen) {
-                const words = s.split(" ");
-                let sub = "";
-                for (const w of words) {
-                    if ((sub + " " + w).trim().length <= maxLen) {
-                        sub = (sub + " " + w).trim();
-                    } else {
-                        if (sub) chunks.push(sub);
-                        sub = w;
-                    }
-                }
-                current = sub;
-            } else {
-                current = s.trim();
-            }
-        }
-    }
-    if (current) chunks.push(current);
-    return chunks;
-}
-
-function playAudioChunks(
-    chunks: string[],
-    lang: string,
-    onStart: () => void,
-    onEnd: () => void,
-    onError: () => void,
-): { cancel: () => void } {
-    let currentIndex = 0;
-    let isCancelled = false;
-    let currentAudio: HTMLAudioElement | null = null;
-
-    onStart();
-
-    function playNext() {
-        if (isCancelled) return;
-        if (currentIndex >= chunks.length) {
-            onEnd();
-            return;
-        }
-
-        const chunk = chunks[currentIndex];
-        currentIndex++;
-
-        const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(lang)}&client=tw-ob&q=${encodeURIComponent(chunk)}`;
-        currentAudio = new Audio(url);
-
-        currentAudio.onended = () => {
-            if (!isCancelled) playNext();
-        };
-        currentAudio.onerror = () => {
-            if (!isCancelled) {
-                onEnd();
-            }
-        };
-
-        currentAudio.play().catch(() => {
-            if (!isCancelled) onError();
-        });
-    }
-
-    playNext();
-
-    return {
-        cancel: () => {
-            isCancelled = true;
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio = null;
-            }
-        },
-    };
-}
-
-function pickBestVoice(
+function findVietnameseVoice(
     voices: SpeechSynthesisVoice[],
-    lang: string,
 ): SpeechSynthesisVoice | null {
     if (!voices || voices.length === 0) return null;
 
-    const targetLang = lang.toLowerCase().replace(/_/g, "-");
-    const targetPrefix = targetLang.split("-")[0];
+    // Search by exact language tag
+    const viVoices = voices.filter((v) => {
+        const lang = v.lang.toLowerCase().replace(/_/g, "-");
+        return lang === "vi-vn" || lang.startsWith("vi");
+    });
 
-    // Priority 1: Exact locale match (e.g. "vi-VN" or "vi-vn")
-    const exact = voices.filter(
-        (v) => v.lang.toLowerCase().replace(/_/g, "-") === targetLang,
-    );
-    if (exact.length > 0) {
-        const naturalVoice = exact.find(
-            (v) =>
-                v.name.includes("Natural") ||
-                v.name.includes("Google") ||
-                v.name.includes("Online") ||
-                v.name.includes("HoaiMy") ||
-                v.name.includes("NamMinh") ||
-                v.name.includes("Linh") ||
-                v.name.includes("An"),
-        );
-        return naturalVoice || exact[0];
+    if (viVoices.length > 0) {
+        // Prefer natural / google voices
+        const natural = viVoices.find((v) => {
+            const n = v.name.toLowerCase();
+            return (
+                n.includes("natural") ||
+                n.includes("google") ||
+                n.includes("online") ||
+                n.includes("hoaimy") ||
+                n.includes("namminh") ||
+                n.includes("linh") ||
+                n.includes("an")
+            );
+        });
+        return natural || viVoices[0];
     }
 
-    // Priority 2: Language prefix match (e.g. "vi")
-    const prefixMatches = voices.filter((v) =>
-        v.lang.toLowerCase().replace(/_/g, "-").startsWith(targetPrefix),
-    );
-    if (prefixMatches.length > 0) {
-        const naturalVoice = prefixMatches.find(
-            (v) =>
-                v.name.includes("Natural") ||
-                v.name.includes("Google") ||
-                v.name.includes("Online") ||
-                v.name.includes("HoaiMy") ||
-                v.name.includes("NamMinh"),
-        );
-        return naturalVoice || prefixMatches[0];
-    }
-
-    // Priority 3: Name match containing "vietnam" or "tiếng việt"
+    // Search by voice name
     const nameMatch = voices.find((v) => {
-        const nameLower = v.name.toLowerCase();
+        const n = v.name.toLowerCase();
         return (
-            nameLower.includes("vietnam") ||
-            nameLower.includes("tiếng việt") ||
-            nameLower.includes("vietnamese")
+            n.includes("vietnam") ||
+            n.includes("tiếng việt") ||
+            n.includes("vietnamese")
         );
     });
-    if (nameMatch) return nameMatch;
+
+    return nameMatch || null;
+}
+
+function findEnglishVoice(
+    voices: SpeechSynthesisVoice[],
+): SpeechSynthesisVoice | null {
+    if (!voices || voices.length === 0) return null;
+
+    const enVoices = voices.filter((v) => {
+        const lang = v.lang.toLowerCase().replace(/_/g, "-");
+        return lang === "en-us" || lang.startsWith("en");
+    });
+
+    if (enVoices.length > 0) {
+        const natural = enVoices.find((v) => {
+            const n = v.name.toLowerCase();
+            return (
+                n.includes("natural") ||
+                n.includes("google") ||
+                n.includes("online")
+            );
+        });
+        return natural || enVoices[0];
+    }
 
     return null;
 }
@@ -190,7 +115,7 @@ export function useSpeechSynthesis({
     const lastTextRef = useRef<string>("");
     const pendingEndRef = useRef<(() => void) | undefined>(undefined);
     const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-    const audioControllerRef = useRef<{ cancel: () => void } | null>(null);
+    const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
     const synth =
         typeof window !== "undefined" ? window.speechSynthesis : null;
@@ -210,19 +135,22 @@ export function useSpeechSynthesis({
     }, [synth]);
 
     const cancel = useCallback(() => {
-        synth?.cancel();
+        if (currentAudioRef.current) {
+            currentAudioRef.current.pause();
+            currentAudioRef.current = null;
+        }
+        if (synth) {
+            synth.cancel();
+        }
         utteranceRef.current = null;
         pendingEndRef.current = undefined;
-        if (audioControllerRef.current) {
-            audioControllerRef.current.cancel();
-            audioControllerRef.current = null;
-        }
         setStatus("idle");
     }, [synth]);
 
     const speak = useCallback(
-        async (text: string, onEnd?: () => void) => {
-            if (!text.trim()) return;
+        (text: string, onEnd?: () => void) => {
+            const trimmed = text.trim();
+            if (!trimmed) return;
 
             cancel();
 
@@ -231,74 +159,100 @@ export function useSpeechSynthesis({
                 return;
             }
 
-            lastTextRef.current = text;
+            lastTextRef.current = trimmed;
             pendingEndRef.current = onEnd;
 
-            let availableVoices =
+            const allVoices =
                 voices.length > 0 ? voices : (synth?.getVoices() ?? []);
 
-            if (synth && availableVoices.length === 0) {
-                availableVoices = await new Promise<SpeechSynthesisVoice[]>(
-                    (resolve) => {
-                        let timer: ReturnType<typeof setTimeout> | null = null;
-                        const onVoices = () => {
-                            if (timer) clearTimeout(timer);
-                            synth.removeEventListener("voiceschanged", onVoices);
-                            const updated = synth.getVoices();
-                            setVoices(updated);
-                            resolve(updated);
-                        };
-                        synth.addEventListener("voiceschanged", onVoices);
-                        timer = setTimeout(() => {
-                            synth.removeEventListener("voiceschanged", onVoices);
-                            resolve(synth.getVoices() ?? []);
-                        }, 250);
-                    },
-                );
-            }
+            // If Vietnamese is requested:
+            // Check if the user's browser actually has an authentic Vietnamese voice.
+            if (language === "vi") {
+                const viVoice = findVietnameseVoice(allVoices);
 
-            const targetLang = TTS_LANG_MAP[language];
-            const bestVoice = pickBestVoice(availableVoices, targetLang);
+                if (viVoice && synth) {
+                    // Browser has native Vietnamese voice installed
+                    const utterance = new SpeechSynthesisUtterance(trimmed);
+                    utterance.voice = viVoice;
+                    utterance.lang = viVoice.lang || "vi-VN";
 
-            // If Vietnamese is chosen and no Vietnamese voice exists on this device/browser,
-            // fall back to clean native Google TTS audio so the English voice never reads Vietnamese.
-            if (language === "vi" && !bestVoice) {
-                const chunks = splitTextIntoTtsChunks(text);
-                audioControllerRef.current = playAudioChunks(
-                    chunks,
-                    "vi",
-                    () => setStatus("speaking"),
-                    () => {
+                    const prosody = PERSONA_PROSODY[persona];
+                    utterance.rate = prosody.rate;
+                    utterance.pitch = prosody.pitch;
+                    utterance.volume = prosody.volume;
+
+                    utterance.onstart = () => setStatus("speaking");
+                    utterance.onend = () => {
                         setStatus("idle");
-                        audioControllerRef.current = null;
+                        utteranceRef.current = null;
                         const cb = pendingEndRef.current;
                         pendingEndRef.current = undefined;
                         cb?.();
-                    },
-                    () => {
+                    };
+                    utterance.onerror = (e) => {
+                        if (e.error === "interrupted") return;
                         setStatus("idle");
-                        audioControllerRef.current = null;
-                    },
+                        utteranceRef.current = null;
+                        pendingEndRef.current = undefined;
+                    };
+
+                    utteranceRef.current = utterance;
+                    synth.speak(utterance);
+                    return;
+                }
+
+                // If browser has NO Vietnamese voice (e.g. Linux / Windows without Vietnamese pack),
+                // play high-quality native Vietnamese audio from our server route /api/tts
+                const audio = new Audio(
+                    `/api/tts?text=${encodeURIComponent(trimmed)}&lang=vi`,
                 );
+                currentAudioRef.current = audio;
+
+                audio.onplay = () => setStatus("speaking");
+                audio.onended = () => {
+                    setStatus("idle");
+                    currentAudioRef.current = null;
+                    const cb = pendingEndRef.current;
+                    pendingEndRef.current = undefined;
+                    cb?.();
+                };
+                audio.onerror = () => {
+                    setStatus("idle");
+                    currentAudioRef.current = null;
+                    // If audio fails for any reason, finish gracefully without blocking the room
+                    const cb = pendingEndRef.current;
+                    pendingEndRef.current = undefined;
+                    cb?.();
+                };
+
+                audio.play().catch(() => {
+                    // If browser blocked autoplay, resolve callback so candidate can proceed
+                    setStatus("idle");
+                    currentAudioRef.current = null;
+                    const cb = pendingEndRef.current;
+                    pendingEndRef.current = undefined;
+                    cb?.();
+                });
                 return;
             }
 
+            // English speech synthesis
             if (!synth) {
                 onEnd?.();
                 return;
             }
 
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = targetLang;
+            const enVoice = findEnglishVoice(allVoices);
+            const utterance = new SpeechSynthesisUtterance(trimmed);
+            utterance.lang = TTS_LANG_MAP.en;
 
             const prosody = PERSONA_PROSODY[persona];
             utterance.rate = prosody.rate;
             utterance.pitch = prosody.pitch;
             utterance.volume = prosody.volume;
 
-            if (bestVoice) {
-                utterance.voice = bestVoice;
-                utterance.lang = bestVoice.lang;
+            if (enVoice) {
+                utterance.voice = enVoice;
             }
 
             utterance.onstart = () => setStatus("speaking");
