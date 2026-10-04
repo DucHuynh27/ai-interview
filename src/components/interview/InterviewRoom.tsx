@@ -472,15 +472,16 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                     <span>AI đang đọc câu hỏi...</span>
                                     {/* 12 Animated Waveform Bars */}
                                     <div className="ml-2 flex items-center gap-0.5">
-                                        {[14, 22, 10, 26, 18, 28, 16, 22, 12, 24, 18, 14].map(
-                                            (h, i) => (
-                                                <span
-                                                    key={`bar-${i}`}
-                                                    style={{ height: `${h}px` }}
-                                                    className="w-0.5 animate-pulse rounded-full bg-emerald-400"
-                                                />
-                                            ),
-                                        )}
+                                        {[
+                                            14, 22, 10, 26, 18, 28, 16, 22, 12,
+                                            24, 18, 14,
+                                        ].map((h, i) => (
+                                            <span
+                                                key={`bar-${i}`}
+                                                style={{ height: `${h}px` }}
+                                                className="w-0.5 animate-pulse rounded-full bg-emerald-400"
+                                            />
+                                        ))}
                                     </div>
                                 </div>
                             )}
@@ -491,14 +492,18 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                         <span className="absolute inline-flex size-full animate-ping rounded-full bg-amber-400 opacity-75" />
                                         <span className="relative inline-flex size-2 rounded-full bg-amber-500" />
                                     </span>
-                                    <span>Đang lắng nghe câu trả lời của bạn...</span>
+                                    <span>
+                                        Đang lắng nghe câu trả lời của bạn...
+                                    </span>
                                 </div>
                             )}
 
                             {aiState === "thinking" && (
                                 <div className="flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-3.5 py-1 text-xs font-semibold text-purple-300">
                                     <Sparkles className="size-3.5 animate-spin" />
-                                    <span>AI đang phân tích & chuẩn bị phản hồi...</span>
+                                    <span>
+                                        AI đang phân tích & chuẩn bị phản hồi...
+                                    </span>
                                 </div>
                             )}
                         </div>
@@ -549,7 +554,9 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                         ? "bg-emerald-500/20 text-emerald-400"
                                         : "bg-rose-500/20 text-rose-400"
                                 }`}
-                                title={isMicOn ? "Micro đang bật" : "Micro đã tắt"}
+                                title={
+                                    isMicOn ? "Micro đang bật" : "Micro đã tắt"
+                                }
                             >
                                 {isMicOn ? (
                                     <Mic className="size-2.5" />
@@ -571,7 +578,11 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                             variant="outline"
                                             className={`font-semibold text-xs ${CATEGORY_BADGES[currentQuestion.category]}`}
                                         >
-                                            {CATEGORY_NAMES[currentQuestion.category]}
+                                            {
+                                                CATEGORY_NAMES[
+                                                    currentQuestion.category
+                                                ]
+                                            }
                                         </Badge>
                                         <span className="text-xs font-semibold text-zinc-400">
                                             Câu hỏi {currentQuestionIndex + 1}/
@@ -583,7 +594,9 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                         <button
                                             type="button"
                                             onClick={() =>
-                                                setShowBilingual((prev) => !prev)
+                                                setShowBilingual(
+                                                    (prev) => !prev,
+                                                )
                                             }
                                             className={`rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors ${
                                                 showBilingual
@@ -636,10 +649,13 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                                 <Info className="mt-0.5 size-3.5 shrink-0 text-primary" />
                                                 <div>
                                                     <span className="font-bold text-primary">
-                                                        Kỳ vọng từ người phỏng vấn:{" "}
+                                                        Kỳ vọng từ người phỏng
+                                                        vấn:{" "}
                                                     </span>
                                                     <span className="text-zinc-300">
-                                                        {currentQuestion.targetGoal}
+                                                        {
+                                                            currentQuestion.targetGoal
+                                                        }
                                                     </span>
                                                 </div>
                                             </div>
@@ -681,7 +697,9 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                     <button
                                         key={q.order}
                                         type="button"
-                                        onClick={() => handleSelectQuestion(idx)}
+                                        onClick={() =>
+                                            handleSelectQuestion(idx)
+                                        }
                                         className={`w-full rounded-xl border p-3 text-left transition-all ${
                                             isCurrent
                                                 ? "border-primary/60 bg-zinc-900 shadow-md ring-1 ring-primary/40"
@@ -716,7 +734,8 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
 
                         <div className="border-t border-zinc-800 pt-3">
                             <p className="text-center text-[11px] text-zinc-500">
-                                Persona: {personaMeta.name} ({personaMeta.title})
+                                Persona: {personaMeta.name} ({personaMeta.title}
+                                )
                             </p>
                         </div>
                     </aside>

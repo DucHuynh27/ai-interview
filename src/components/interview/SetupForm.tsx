@@ -149,7 +149,8 @@ export function SetupForm() {
     const removeCv = () => setForm((prev) => ({ ...prev, cvFile: null }));
 
     const selectedPersona =
-        PERSONA_OPTIONS.find((p) => p.id === form.persona) ?? PERSONA_OPTIONS[0];
+        PERSONA_OPTIONS.find((p) => p.id === form.persona) ??
+        PERSONA_OPTIONS[0];
     const SelectedPersonaIcon = PERSONA_ICONS[form.persona];
 
     function handleStartInterview() {
