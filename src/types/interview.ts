@@ -51,3 +51,42 @@ export interface InterviewSessionData {
     language: LanguageCode;
     data: GenerateQuestionsResult;
 }
+
+export interface CandidateAnswerSubmission {
+    sessionId: string;
+    questionIndex: number;
+    questionText: string;
+    category: QuestionCategory;
+    candidateAnswer: string;
+    persona: PersonaType;
+    language: LanguageCode;
+    targetGoal: string;
+    isFinalQuestion: boolean;
+}
+
+export interface TurnFeedbackResult {
+    acknowledgment: string;
+    transition: string;
+    fullResponse: string;
+}
+
+export interface InterviewTranscriptTurn {
+    questionIndex: number;
+    questionText: string;
+    category: QuestionCategory;
+    candidateAnswer: string;
+    interviewerFeedback: string;
+    answeredAt: string;
+}
+
+export interface SessionTranscript {
+    sessionId: string;
+    persona: PersonaType;
+    language: LanguageCode;
+    turns: InterviewTranscriptTurn[];
+    isCompleted: boolean;
+    completedAt?: string;
+}
+
+export const TRANSCRIPT_STORAGE_PREFIX = "interview_transcript_";
+

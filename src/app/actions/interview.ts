@@ -2,11 +2,14 @@
 
 import { ai } from "@/lib/ai/gemini-client";
 import { buildQuestionGeneratorSystemPrompt } from "@/lib/ai/prompts/question-generator";
+import { buildTurnResponderPrompt } from "@/lib/ai/prompts/turn-responder";
 import { maskPiiText } from "@/lib/utils/pii-masker";
 import type {
+    CandidateAnswerSubmission,
     GenerateQuestionsResult,
     LanguageCode,
     PersonaType,
+    TurnFeedbackResult,
 } from "@/types/interview";
 import { createPartFromBase64 } from "@google/genai";
 import { z } from "zod";
@@ -109,3 +112,91 @@ Analyze them and generate the interview plan now. Remember: respond with ONLY th
 
     return { ok: true, data: validated.data };
 }
+
+// ─── Turn Feedback Schema & Action ───────────────────────────────────────────
+
+const TurnFeedbackSchema = z.object({
+    acknowledgment: z.string().min(2),
+    transition: z.string().min(2),
+});
+
+type TurnActionSuccess = { ok: true; data: TurnFeedbackResult };
+type TurnActionError = { ok: false; error: string };
+export type SubmitAnswerActionResult = TurnActionSuccess | TurnActionError;
+
+export async function submitCandidateAnswerTurn(
+    submission: CandidateAnswerSubmission,
+): Promise<SubmitAnswerActionResult> {
+    if (!submission.candidateAnswer || submission.candidateAnswer.trim().length === 0) {
+        return {
+            ok: false,
+            error: "Câu trả lời không được để trống.",
+        };
+    }
+
+    const sanitizedAnswer = maskPiiText(submission.candidateAnswer.trim());
+
+    const { systemInstruction, userPrompt } = buildTurnResponderPrompt({
+        persona: submission.persona,
+        language: submission.language,
+        questionText: submission.questionText,
+        category: submission.category,
+        targetGoal: submission.targetGoal,
+        candidateAnswer: sanitizedAnswer,
+        isFinalQuestion: submission.isFinalQuestion,
+    });
+
+    const response = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        config: { systemInstruction },
+        contents: [
+            {
+                role: "user",
+                parts: [{ text: userPrompt }],
+            },
+        ],
+    });
+
+    const rawText = response.text?.trim() ?? "";
+    const jsonText = rawText
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```$/, "")
+        .trim();
+
+    const parsed = (() => {
+        try {
+            return JSON.parse(jsonText);
+        } catch {
+            return null;
+        }
+    })();
+
+    if (!parsed) {
+        return {
+            ok: false,
+            error: "AI không thể xử lý phản hồi lúc này. Vui lòng thử lại.",
+        };
+    }
+
+    const validated = TurnFeedbackSchema.safeParse(parsed);
+
+    if (!validated.success) {
+        return {
+            ok: false,
+            error: "Định dạng phản hồi từ AI không đúng cấu trúc.",
+        };
+    }
+
+    const { acknowledgment, transition } = validated.data;
+    const fullResponse = `${acknowledgment} ${transition}`.trim();
+
+    return {
+        ok: true,
+        data: {
+            acknowledgment,
+            transition,
+            fullResponse,
+        },
+    };
+}
+

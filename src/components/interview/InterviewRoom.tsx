@@ -1,37 +1,51 @@
 "use client";
 
+import { submitCandidateAnswerTurn } from "@/app/actions/interview";
 import { PREVIEW_SESSION_KEY } from "@/components/interview/SetupForm";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import type {
+    CandidateAnswerSubmission,
     InterviewQuestion,
     InterviewSessionData,
+    InterviewTranscriptTurn,
     PersonaType,
     QuestionCategory,
+    SessionTranscript,
+    TurnFeedbackResult,
 } from "@/types/interview";
+import { TRANSCRIPT_STORAGE_PREFIX } from "@/types/interview";
 import {
+    AlertCircle,
     Check,
     ChevronDown,
     ChevronLeft,
     ChevronRight,
     ChevronUp,
+    Clock,
     ClosedCaption,
     Compass,
+    FileText,
     Flame,
     HeartHandshake,
     Info,
     ListCollapse,
     Mic,
     MicOff,
+    Pause,
     PhoneOff,
+    Play,
+    Send,
     Sparkles,
     Terminal,
+    Trophy,
     User,
     Video,
     VideoOff,
     Volume2,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 // ─── Default Mock Data (Fallback khi vào thẳng link phòng) ───────────────────
 
@@ -163,6 +177,8 @@ const CATEGORY_BADGES: Record<QuestionCategory, string> = {
 
 type AiState = "speaking" | "listening" | "thinking";
 
+const AUTO_ADVANCE_SECONDS = 6;
+
 interface InterviewRoomProps {
     sessionId: string;
 }
@@ -174,7 +190,25 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
     const [isDemoFallback, setIsDemoFallback] = useState(false);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-    // ─── Room Controls & Hardware Simulation ──────────────────────────────────
+    // ─── Conversation Turns & Transcript State ────────────────────────────────
+    const [transcriptTurns, setTranscriptTurns] = useState<
+        InterviewTranscriptTurn[]
+    >([]);
+    const [draftAnswers, setDraftAnswers] = useState<Record<number, string>>(
+        {},
+    );
+    const [activeTurnFeedback, setActiveTurnFeedback] =
+        useState<TurnFeedbackResult | null>(null);
+    const [countdownSec, setCountdownSec] = useState<number | null>(null);
+    const [isPausedCountdown, setIsPausedCountdown] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [isPendingSubmit, startSubmitTransition] = useTransition();
+
+    // ─── Completion & Modals ──────────────────────────────────────────────────
+    const [isSessionCompleted, setIsSessionCompleted] = useState(false);
+    const [showTranscriptModal, setShowTranscriptModal] = useState(false);
+
+    // ─── Room Controls & Hardware ─────────────────────────────────────────────
     const [isMicOn, setIsMicOn] = useState(true);
     const [isCameraOn, setIsCameraOn] = useState(true);
     const [showCaptions, setShowCaptions] = useState(true);
@@ -193,29 +227,47 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
 
-    // Load session data from sessionStorage or fallback
+    // Load session data and previous transcripts from sessionStorage
     useEffect(() => {
-        const raw = sessionStorage.getItem(
+        const rawSession = sessionStorage.getItem(
             `${PREVIEW_SESSION_KEY}:${sessionId}`,
         );
 
         queueMicrotask(() => {
-            if (raw) {
+            if (rawSession) {
                 try {
-                    const parsed = JSON.parse(raw) as InterviewSessionData;
+                    const parsed = JSON.parse(
+                        rawSession,
+                    ) as InterviewSessionData;
                     setSessionData(parsed);
                     setIsDemoFallback(false);
-                    return;
                 } catch {
-                    // fallback below
+                    setSessionData({ ...DEFAULT_MOCK_SESSION, sessionId });
+                    setIsDemoFallback(true);
                 }
+            } else {
+                setSessionData({ ...DEFAULT_MOCK_SESSION, sessionId });
+                setIsDemoFallback(true);
             }
 
-            setSessionData({
-                ...DEFAULT_MOCK_SESSION,
-                sessionId,
-            });
-            setIsDemoFallback(true);
+            const rawTranscript = sessionStorage.getItem(
+                `${TRANSCRIPT_STORAGE_PREFIX}${sessionId}`,
+            );
+            if (rawTranscript) {
+                try {
+                    const parsedTranscript = JSON.parse(
+                        rawTranscript,
+                    ) as SessionTranscript;
+                    if (Array.isArray(parsedTranscript.turns)) {
+                        setTranscriptTurns(parsedTranscript.turns);
+                        if (parsedTranscript.isCompleted) {
+                            setIsSessionCompleted(true);
+                        }
+                    }
+                } catch {
+                    // Ignore corrupted transcript cache
+                }
+            }
         });
     }, [sessionId]);
 
@@ -275,6 +327,11 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
     const PersonaIcon = personaMeta.icon;
     const isEnglishSession = sessionData.language === "en";
 
+    // Completed turn for the currently selected question (if previously answered)
+    const existingTurnForCurrent = transcriptTurns.find(
+        (t) => t.questionIndex === currentQuestionIndex,
+    );
+
     const formatTimer = (totalSecs: number) => {
         const mins = Math.floor(totalSecs / 60)
             .toString()
@@ -283,27 +340,160 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
         return `${mins}:${secs}`;
     };
 
-    const handleNextQuestion = () => {
+    const handleSelectQuestion = (index: number) => {
+        setCurrentQuestionIndex(index);
+        setShowQuestionDrawer(false);
+        setActiveTurnFeedback(null);
+        setCountdownSec(null);
+        setSubmitError(null);
+        setAiState("speaking");
+    };
+
+    const handleAdvanceNext = useCallback(() => {
+        setCountdownSec(null);
+        setActiveTurnFeedback(null);
+        setSubmitError(null);
+
         if (currentQuestionIndex < totalQuestions - 1) {
             setCurrentQuestionIndex((prev) => prev + 1);
             setAiState("speaking");
+        } else {
+            setIsSessionCompleted(true);
         }
-    };
+    }, [currentQuestionIndex, totalQuestions]);
 
     const handlePrevQuestion = () => {
         if (currentQuestionIndex > 0) {
             setCurrentQuestionIndex((prev) => prev - 1);
+            setActiveTurnFeedback(null);
+            setCountdownSec(null);
+            setSubmitError(null);
             setAiState("speaking");
         }
     };
 
-    const handleSelectQuestion = (index: number) => {
-        setCurrentQuestionIndex(index);
-        setShowQuestionDrawer(false);
-        setAiState("speaking");
+    // Auto-advance countdown timer effect
+    useEffect(() => {
+        if (countdownSec === null || isPausedCountdown) {
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            if (countdownSec <= 1) {
+                handleAdvanceNext();
+            } else {
+                setCountdownSec((prev) => (prev !== null ? prev - 1 : null));
+            }
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [countdownSec, isPausedCountdown, handleAdvanceNext]);
+
+
+    // Handle candidate answering current question
+    const handleAnswerInputChange = (val: string) => {
+        setDraftAnswers((prev) => ({
+            ...prev,
+            [currentQuestionIndex]: val,
+        }));
+        if (aiState !== "listening") {
+            setAiState("listening");
+        }
+    };
+
+    const handleSubmitAnswer = () => {
+        const candidateAnswer = (
+            draftAnswers[currentQuestionIndex] ?? ""
+        ).trim();
+
+        if (candidateAnswer.length < 5) {
+            setSubmitError("Vui lòng trả lời chi tiết hơn (ít nhất 5 ký tự).");
+            return;
+        }
+
+        setSubmitError(null);
+        setAiState("thinking");
+
+        const isFinalQuestion = currentQuestionIndex === totalQuestions - 1;
+        const currentQuestionText = isEnglishSession
+            ? currentQuestion.questionEn
+            : currentQuestion.questionVi;
+
+        const submissionPayload: CandidateAnswerSubmission = {
+            sessionId,
+            questionIndex: currentQuestionIndex,
+            questionText: currentQuestionText,
+            category: currentQuestion.category,
+            candidateAnswer,
+            persona,
+            language: sessionData.language,
+            targetGoal: currentQuestion.targetGoal,
+            isFinalQuestion,
+        };
+
+        startSubmitTransition(async () => {
+            const res = await submitCandidateAnswerTurn(submissionPayload);
+
+            if (!res.ok) {
+                setSubmitError(res.error);
+                setAiState("listening");
+                return;
+            }
+
+            const feedbackData = res.data;
+            setActiveTurnFeedback(feedbackData);
+            setAiState("speaking");
+
+            const newTurn: InterviewTranscriptTurn = {
+                questionIndex: currentQuestionIndex,
+                questionText: currentQuestionText,
+                category: currentQuestion.category,
+                candidateAnswer,
+                interviewerFeedback: feedbackData.fullResponse,
+                answeredAt: new Date().toLocaleTimeString("vi-VN"),
+            };
+
+            const updatedTurns = [
+                ...transcriptTurns.filter(
+                    (t) => t.questionIndex !== currentQuestionIndex,
+                ),
+                newTurn,
+            ].sort((a, b) => a.questionIndex - b.questionIndex);
+
+            setTranscriptTurns(updatedTurns);
+
+            // Persist entire transcript to sessionStorage for Sprint 4 evaluation
+            const sessionTranscript: SessionTranscript = {
+                sessionId,
+                persona,
+                language: sessionData.language,
+                turns: updatedTurns,
+                isCompleted: isFinalQuestion,
+                completedAt: isFinalQuestion
+                    ? new Date().toISOString()
+                    : undefined,
+            };
+
+            sessionStorage.setItem(
+                `${TRANSCRIPT_STORAGE_PREFIX}${sessionId}`,
+                JSON.stringify(sessionTranscript),
+            );
+
+            if (isFinalQuestion) {
+                setIsSessionCompleted(true);
+            } else {
+                setCountdownSec(AUTO_ADVANCE_SECONDS);
+                setIsPausedCountdown(false);
+            }
+        });
     };
 
     const isCameraActive = isCameraOn && cameraStream !== null;
+    const currentDraftAnswer = draftAnswers[currentQuestionIndex] ?? "";
+    const wordCount = currentDraftAnswer
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length;
 
     return (
         <div className="relative flex h-screen w-full flex-col overflow-hidden bg-zinc-950 font-sans text-zinc-100 select-none">
@@ -352,7 +542,9 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                 {/* Center: 5 Questions Progress Steps */}
                 <div className="flex items-center gap-1.5 sm:gap-2">
                     {questions.map((q, idx) => {
-                        const isDone = idx < currentQuestionIndex;
+                        const isDone = transcriptTurns.some(
+                            (t) => t.questionIndex === idx,
+                        );
                         const isCurrent = idx === currentQuestionIndex;
 
                         return (
@@ -365,7 +557,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                     isCurrent
                                         ? "bg-zinc-100 text-zinc-950 shadow-md ring-2 ring-primary/60 scale-105"
                                         : isDone
-                                          ? "border border-zinc-700 bg-zinc-900/90 text-zinc-300 hover:border-zinc-500"
+                                          ? "border border-emerald-500/40 bg-emerald-950/40 text-emerald-300 hover:border-emerald-500"
                                           : "border border-zinc-800/80 bg-zinc-950/60 text-zinc-500 hover:text-zinc-300"
                                 }`}
                             >
@@ -384,8 +576,17 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                     })}
                 </div>
 
-                {/* Right: Drawer Toggle & Exit Button */}
+                {/* Right: Drawer Toggle, Transcript & Exit Button */}
                 <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setShowTranscriptModal(true)}
+                        className="flex size-9 items-center justify-center rounded-lg border border-zinc-800/80 bg-zinc-900/50 text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-200"
+                        title="Xem toàn bộ transcript"
+                    >
+                        <FileText className="size-4" />
+                    </button>
+
                     <button
                         type="button"
                         onClick={() => setShowQuestionDrawer((prev) => !prev)}
@@ -410,7 +611,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                 </div>
             </header>
 
-            {/* ─── Main Meeting Stage: AI Video + Candidate PiP + Subtitles ────── */}
+            {/* ─── Main Meeting Stage: AI Video + Candidate PiP + Subtitles / Text Input ── */}
             <main className="relative flex flex-1 items-center justify-center overflow-hidden p-3 sm:p-5">
                 {/* AI Interviewer Video Stage */}
                 <div className="relative flex size-full max-w-6xl flex-col items-center justify-center rounded-3xl border border-zinc-800/80 bg-gradient-to-b from-zinc-900/90 via-zinc-950 to-zinc-950 p-6 shadow-2xl overflow-hidden">
@@ -419,25 +620,72 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                         className={`pointer-events-none absolute -top-40 size-96 rounded-full bg-gradient-to-b ${personaMeta.avatarColor} opacity-15 blur-3xl`}
                     />
 
+                    {/* Candidate Video Feed (Picture-in-Picture at Top Right) */}
+                    <div className="group absolute top-4 right-4 z-20 h-28 w-40 sm:h-36 sm:w-52 overflow-hidden rounded-2xl border-2 border-zinc-700/80 bg-zinc-900 shadow-xl transition-all hover:border-zinc-500">
+                        {isCameraActive ? (
+                            <video
+                                ref={videoRef}
+                                autoPlay
+                                playsInline
+                                muted
+                                className="size-full object-cover -scale-x-100"
+                            />
+                        ) : (
+                            <div className="flex size-full flex-col items-center justify-center gap-2 bg-gradient-to-b from-zinc-900 to-zinc-950 p-2 text-center">
+                                <div className="flex size-9 items-center justify-center rounded-full bg-zinc-800 text-zinc-400">
+                                    <User className="size-5" />
+                                </div>
+                                <span className="text-[10px] font-medium text-zinc-400">
+                                    {isCameraOn
+                                        ? "Đang kết nối camera..."
+                                        : "Camera đã tắt"}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Candidate Name & Mic Badge */}
+                        <div className="absolute right-1.5 bottom-1.5 left-1.5 flex items-center justify-between rounded-lg bg-zinc-950/80 px-2 py-0.5 backdrop-blur-md">
+                            <span className="truncate text-[10px] font-medium text-zinc-200">
+                                Bạn (Ứng viên)
+                            </span>
+                            <div
+                                className={`flex size-3.5 items-center justify-center rounded ${
+                                    isMicOn
+                                        ? "bg-emerald-500/20 text-emerald-400"
+                                        : "bg-rose-500/20 text-rose-400"
+                                }`}
+                                title={
+                                    isMicOn ? "Micro đang bật" : "Micro đã tắt"
+                                }
+                            >
+                                {isMicOn ? (
+                                    <Mic className="size-2" />
+                                ) : (
+                                    <MicOff className="size-2" />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
                     {/* AI Interviewer Main Visual / Avatar Presentation */}
-                    <div className="relative z-10 flex flex-col items-center text-center">
+                    <div className="relative z-10 -mt-10 flex flex-col items-center text-center">
                         {/* Avatar container with dynamic audio pulsating waves */}
-                        <div className="relative mb-5 flex items-center justify-center">
+                        <div className="relative mb-4 flex items-center justify-center">
                             {/* Pulsing rings when AI is speaking */}
                             {aiState === "speaking" && (
                                 <>
-                                    <span className="absolute size-36 animate-ping rounded-full bg-emerald-500/20 duration-1000" />
-                                    <span className="absolute size-44 animate-pulse rounded-full border border-emerald-500/30" />
-                                    <span className="absolute size-52 animate-pulse rounded-full border border-emerald-500/10" />
+                                    <span className="absolute size-32 animate-ping rounded-full bg-emerald-500/20 duration-1000" />
+                                    <span className="absolute size-40 animate-pulse rounded-full border border-emerald-500/30" />
+                                    <span className="absolute size-48 animate-pulse rounded-full border border-emerald-500/10" />
                                 </>
                             )}
 
                             {/* Outer avatar ring */}
                             <div
-                                className={`relative flex size-32 items-center justify-center rounded-full border-2 bg-gradient-to-tr ${personaMeta.avatarColor} p-1 shadow-2xl transition-all ${personaMeta.borderColor} ${personaMeta.glowStyle}`}
+                                className={`relative flex size-28 items-center justify-center rounded-full border-2 bg-gradient-to-tr ${personaMeta.avatarColor} p-1 shadow-2xl transition-all ${personaMeta.borderColor} ${personaMeta.glowStyle}`}
                             >
                                 <div className="flex size-full items-center justify-center rounded-full bg-zinc-950/80 backdrop-blur-sm">
-                                    <PersonaIcon className="size-14 text-zinc-100" />
+                                    <PersonaIcon className="size-12 text-zinc-100" />
                                 </div>
 
                                 {/* Active Speaking / Status Dot */}
@@ -450,11 +698,11 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                         {/* Name & Title Plate */}
                         <div className="space-y-1">
                             <div className="flex items-center justify-center gap-2">
-                                <h2 className="text-xl font-bold tracking-tight text-zinc-100 sm:text-2xl">
+                                <h2 className="text-lg font-bold tracking-tight text-zinc-100 sm:text-xl">
                                     {personaMeta.name}
                                 </h2>
                                 <span
-                                    className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${personaMeta.badgeStyle}`}
+                                    className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${personaMeta.badgeStyle}`}
                                 >
                                     {personaMeta.styleTag}
                                 </span>
@@ -465,16 +713,20 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                         </div>
 
                         {/* AI Audio Waveform Visualizer & State Badge */}
-                        <div className="mt-4 flex flex-col items-center gap-2">
+                        <div className="mt-3 flex flex-col items-center gap-2">
                             {aiState === "speaking" && (
                                 <div className="flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
                                     <Volume2 className="size-3.5 animate-pulse" />
-                                    <span>AI đang đọc câu hỏi...</span>
-                                    {/* 12 Animated Waveform Bars */}
+                                    <span>
+                                        {activeTurnFeedback
+                                            ? `${personaMeta.name} đang phản hồi...`
+                                            : "AI đang đọc câu hỏi..."}
+                                    </span>
+                                    {/* 10 Animated Waveform Bars */}
                                     <div className="ml-2 flex items-center gap-0.5">
                                         {[
-                                            14, 22, 10, 26, 18, 28, 16, 22, 12,
-                                            24, 18, 14,
+                                            14, 22, 10, 26, 18, 24, 16, 22, 12,
+                                            18,
                                         ].map((h, i) => (
                                             <span
                                                 key={`bar-${i}`}
@@ -510,7 +762,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                     </div>
 
                     {/* Interviewer Nameplate Tag (Bottom Left) */}
-                    <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2 rounded-xl border border-zinc-800/80 bg-zinc-950/80 px-3 py-1.5 backdrop-blur-md">
+                    <div className="absolute bottom-4 left-4 z-20 hidden items-center gap-2 rounded-xl border border-zinc-800/80 bg-zinc-950/80 px-3 py-1.5 backdrop-blur-md sm:flex">
                         <div className="flex size-2 rounded-full bg-emerald-500" />
                         <span className="text-xs font-semibold text-zinc-200">
                             {personaMeta.name} (AI Interviewer)
@@ -520,59 +772,12 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                         </div>
                     </div>
 
-                    {/* Candidate Video Feed (Picture-in-Picture at Bottom Right) */}
-                    <div className="group absolute right-4 bottom-4 z-20 h-36 w-48 sm:h-44 sm:w-60 overflow-hidden rounded-2xl border-2 border-zinc-700/80 bg-zinc-900 shadow-xl transition-all hover:border-zinc-500">
-                        {isCameraActive ? (
-                            <video
-                                ref={videoRef}
-                                autoPlay
-                                playsInline
-                                muted
-                                className="size-full object-cover -scale-x-100"
-                            />
-                        ) : (
-                            <div className="flex size-full flex-col items-center justify-center gap-2 bg-gradient-to-b from-zinc-900 to-zinc-950 p-3 text-center">
-                                <div className="flex size-11 items-center justify-center rounded-full bg-zinc-800 text-zinc-400">
-                                    <User className="size-6" />
-                                </div>
-                                <span className="text-[11px] font-medium text-zinc-400">
-                                    {isCameraOn
-                                        ? "Đang kết nối camera..."
-                                        : "Camera đã tắt"}
-                                </span>
-                            </div>
-                        )}
-
-                        {/* Candidate Name & Mic Badge */}
-                        <div className="absolute right-2 bottom-2 left-2 flex items-center justify-between rounded-lg bg-zinc-950/80 px-2.5 py-1 backdrop-blur-md">
-                            <span className="truncate text-[11px] font-medium text-zinc-200">
-                                Bạn (Ứng viên)
-                            </span>
-                            <div
-                                className={`flex size-4 items-center justify-center rounded ${
-                                    isMicOn
-                                        ? "bg-emerald-500/20 text-emerald-400"
-                                        : "bg-rose-500/20 text-rose-400"
-                                }`}
-                                title={
-                                    isMicOn ? "Micro đang bật" : "Micro đã tắt"
-                                }
-                            >
-                                {isMicOn ? (
-                                    <Mic className="size-2.5" />
-                                ) : (
-                                    <MicOff className="size-2.5" />
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* ─── Live Subtitles / Closed Captions ────────────────────── */}
+                    {/* ─── Main Conversation Panel: Subtitles + Text Input + Turn Feedback ─ */}
                     {showCaptions && (
-                        <div className="absolute bottom-20 sm:bottom-24 left-1/2 z-20 w-[92%] max-w-3xl -translate-x-1/2">
-                            <div className="relative rounded-2xl border border-zinc-700/80 bg-zinc-950/85 p-4 shadow-2xl backdrop-blur-xl transition-all sm:p-5">
+                        <div className="absolute bottom-3 left-1/2 z-20 w-[94%] max-w-3xl -translate-x-1/2">
+                            <div className="relative max-h-[58vh] overflow-y-auto rounded-2xl border border-zinc-700/80 bg-zinc-950/90 p-3.5 shadow-2xl backdrop-blur-xl transition-all sm:p-5">
                                 {/* Subtitle Header: Question index, category, toggle bilingual & goal */}
-                                <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800/80 pb-2">
+                                <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800/80 pb-2">
                                     <div className="flex items-center gap-2">
                                         <Badge
                                             variant="outline"
@@ -588,6 +793,12 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                             Câu hỏi {currentQuestionIndex + 1}/
                                             {totalQuestions}
                                         </span>
+                                        {existingTurnForCurrent && (
+                                            <span className="flex items-center gap-1 rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/20">
+                                                <Check className="size-2.5" />
+                                                Đã trả lời
+                                            </span>
+                                        )}
                                     </div>
 
                                     <div className="flex items-center gap-1.5 text-xs">
@@ -626,8 +837,8 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                 </div>
 
                                 {/* Primary Question Text */}
-                                <div className="space-y-2">
-                                    <p className="text-base font-semibold leading-relaxed text-zinc-100 sm:text-lg">
+                                <div className="space-y-1.5">
+                                    <p className="text-sm font-semibold leading-relaxed text-zinc-100 sm:text-base">
                                         {isEnglishSession
                                             ? currentQuestion.questionEn
                                             : currentQuestion.questionVi}
@@ -635,7 +846,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
 
                                     {/* Bilingual translation display */}
                                     {showBilingual && (
-                                        <p className="border-t border-zinc-800/60 pt-2 text-sm italic leading-relaxed text-zinc-400">
+                                        <p className="border-t border-zinc-800/60 pt-1.5 text-xs italic leading-relaxed text-zinc-400">
                                             {isEnglishSession
                                                 ? currentQuestion.questionVi
                                                 : currentQuestion.questionEn}
@@ -644,7 +855,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
 
                                     {/* Collapsible STAR Goal Hint */}
                                     {showGoalHint && (
-                                        <div className="mt-2.5 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-primary-foreground">
+                                        <div className="rounded-xl border border-primary/20 bg-primary/5 p-2.5 text-xs text-primary-foreground">
                                             <div className="flex items-start gap-2">
                                                 <Info className="mt-0.5 size-3.5 shrink-0 text-primary" />
                                                 <div>
@@ -662,6 +873,213 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                         </div>
                                     )}
                                 </div>
+
+                                {/* ─── Active Turn Feedback from AI (After Candidate Submits) ── */}
+                                {activeTurnFeedback ? (
+                                    <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-950/40 p-3 backdrop-blur-md">
+                                        <div className="mb-2 flex items-center justify-between gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <div
+                                                    className={`flex size-6 items-center justify-center rounded-full bg-gradient-to-tr ${personaMeta.avatarColor} text-white shadow`}
+                                                >
+                                                    <PersonaIcon className="size-3.5" />
+                                                </div>
+                                                <span className="text-xs font-bold text-zinc-100">
+                                                    {personaMeta.name} (Phản
+                                                    hồi)
+                                                </span>
+                                                <span
+                                                    className={`rounded-full border px-1.5 py-0.2 text-[10px] font-semibold ${personaMeta.badgeStyle}`}
+                                                >
+                                                    {personaMeta.styleTag}
+                                                </span>
+                                            </div>
+
+                                            {countdownSec !== null && (
+                                                <div className="flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-300">
+                                                    <Clock className="size-3" />
+                                                    <span className="text-[11px] font-medium">
+                                                        Chuyển câu sau{" "}
+                                                        {countdownSec}s
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <p className="text-xs sm:text-sm font-medium leading-relaxed text-zinc-200">
+                                            {activeTurnFeedback.acknowledgment}
+                                        </p>
+                                        <p className="mt-1.5 border-t border-zinc-800/80 pt-1.5 text-xs italic leading-relaxed text-zinc-400">
+                                            {activeTurnFeedback.transition}
+                                        </p>
+
+                                        <div className="mt-3 flex items-center justify-between pt-1">
+                                            {countdownSec !== null ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setIsPausedCountdown(
+                                                            (prev) => !prev,
+                                                        )
+                                                    }
+                                                    className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-zinc-200"
+                                                >
+                                                    {isPausedCountdown ? (
+                                                        <Play className="size-3 text-emerald-400" />
+                                                    ) : (
+                                                        <Pause className="size-3 text-amber-400" />
+                                                    )}
+                                                    <span>
+                                                        {isPausedCountdown
+                                                            ? "Tiếp tục đếm ngược"
+                                                            : "Tạm dừng đếm ngược"}
+                                                    </span>
+                                                </button>
+                                            ) : (
+                                                <span />
+                                            )}
+
+                                            {currentQuestionIndex ===
+                                            totalQuestions - 1 ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setIsSessionCompleted(
+                                                            true,
+                                                        )
+                                                    }
+                                                    className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-emerald-500"
+                                                >
+                                                    <Trophy className="size-3.5" />
+                                                    <span>
+                                                        Hoàn thành phỏng vấn
+                                                    </span>
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAdvanceNext}
+                                                    className="flex items-center gap-1 rounded-lg bg-zinc-100 px-3.5 py-1.5 text-xs font-semibold text-zinc-950 shadow-sm transition-colors hover:bg-white"
+                                                >
+                                                    <span>
+                                                        Sang câu tiếp theo
+                                                    </span>
+                                                    <ChevronRight className="size-3.5" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : existingTurnForCurrent ? (
+                                    /* ─── Previously Answered Question Review View ──────────────── */
+                                    <div className="mt-3 space-y-2 rounded-xl border border-zinc-800/80 bg-zinc-900/60 p-3">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-semibold text-zinc-300">
+                                                Câu trả lời đã lưu của bạn:
+                                            </span>
+                                            <span className="text-[10px] text-zinc-500">
+                                                {
+                                                    existingTurnForCurrent.answeredAt
+                                                }
+                                            </span>
+                                        </div>
+                                        <p className="rounded-lg bg-zinc-950/60 p-2 text-xs leading-relaxed text-zinc-200">
+                                            {
+                                                existingTurnForCurrent.candidateAnswer
+                                            }
+                                        </p>
+                                        <div className="border-t border-zinc-800 pt-2">
+                                            <span className="text-[11px] font-bold text-emerald-400">
+                                                Phản hồi từ {personaMeta.name}:
+                                            </span>
+                                            <p className="mt-1 text-xs italic leading-relaxed text-zinc-300">
+                                                {
+                                                    existingTurnForCurrent.interviewerFeedback
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    /* ─── Candidate Text Input Form (Turn-based Answer Loop) ────── */
+                                    <div className="mt-2.5 space-y-2 border-t border-zinc-800/80 pt-2.5">
+                                        <div className="relative">
+                                            <Textarea
+                                                value={currentDraftAnswer}
+                                                onChange={(e) =>
+                                                    handleAnswerInputChange(
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder={
+                                                    isEnglishSession
+                                                        ? "Type your answer here using the STAR approach (Situation - Task - Action - Result)..."
+                                                        : "Gõ câu trả lời của bạn theo phương pháp STAR (Bối cảnh - Nhiệm vụ - Hành động - Kết quả)..."
+                                                }
+                                                rows={3}
+                                                disabled={isPendingSubmit}
+                                                className="resize-none border-zinc-700/80 bg-zinc-900/90 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-emerald-500"
+                                                onKeyDown={(e) => {
+                                                    if (
+                                                        (e.metaKey ||
+                                                            e.ctrlKey) &&
+                                                        e.key === "Enter"
+                                                    ) {
+                                                        e.preventDefault();
+                                                        handleSubmitAnswer();
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+
+                                        {submitError && (
+                                            <div className="flex items-center gap-1.5 text-xs text-rose-400">
+                                                <AlertCircle className="size-3.5 shrink-0" />
+                                                <span>{submitError}</span>
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-[11px] text-zinc-400">
+                                                <span className="hidden sm:inline">
+                                                    Phím tắt:
+                                                </span>
+                                                <kbd className="rounded border border-zinc-700 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] font-mono text-zinc-300">
+                                                    Ctrl + Enter
+                                                </kbd>
+                                                <span className="text-zinc-600">
+                                                    ·
+                                                </span>
+                                                <span>{wordCount} từ</span>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={handleSubmitAnswer}
+                                                disabled={
+                                                    isPendingSubmit ||
+                                                    currentDraftAnswer.trim()
+                                                        .length === 0
+                                                }
+                                                className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                {isPendingSubmit ? (
+                                                    <>
+                                                        <Sparkles className="size-3.5 animate-spin" />
+                                                        <span>
+                                                            AI đang suy nghĩ...
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span>
+                                                            Gửi câu trả lời
+                                                        </span>
+                                                        <Send className="size-3.5" />
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -676,7 +1094,8 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                     Lộ trình 5 câu hỏi
                                 </h3>
                                 <p className="text-[11px] text-zinc-400">
-                                    Bộ câu hỏi cá nhân hóa theo JD & CV
+                                    Đã hoàn thành {transcriptTurns.length}/
+                                    {totalQuestions} câu hỏi
                                 </p>
                             </div>
                             <button
@@ -691,7 +1110,9 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                         <div className="flex-1 space-y-2.5 overflow-y-auto py-3">
                             {questions.map((q, idx) => {
                                 const isCurrent = idx === currentQuestionIndex;
-                                const isDone = idx < currentQuestionIndex;
+                                const isDone = transcriptTurns.some(
+                                    (t) => t.questionIndex === idx,
+                                );
 
                                 return (
                                     <button
@@ -704,7 +1125,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                             isCurrent
                                                 ? "border-primary/60 bg-zinc-900 shadow-md ring-1 ring-primary/40"
                                                 : isDone
-                                                  ? "border-zinc-800/80 bg-zinc-900/40 opacity-70 hover:opacity-100"
+                                                  ? "border-emerald-500/30 bg-emerald-950/20 hover:border-emerald-500/60"
                                                   : "border-zinc-800/80 bg-zinc-950/60 hover:border-zinc-700 hover:bg-zinc-900/30"
                                         }`}
                                     >
@@ -715,11 +1136,16 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                                 {CATEGORY_NAMES[q.category]}
                                             </span>
                                             <span className="text-[11px] font-mono font-medium text-zinc-400">
-                                                {isCurrent
-                                                    ? "Đang phỏng vấn"
-                                                    : isDone
-                                                      ? "Đã xong"
-                                                      : `Câu ${idx + 1}`}
+                                                {isDone ? (
+                                                    <span className="text-emerald-400 flex items-center gap-1">
+                                                        <Check className="size-3" />{" "}
+                                                        Đã trả lời
+                                                    </span>
+                                                ) : isCurrent ? (
+                                                    "Đang phỏng vấn"
+                                                ) : (
+                                                    `Câu ${idx + 1}`
+                                                )}
                                             </span>
                                         </div>
                                         <p className="line-clamp-2 text-xs font-medium text-zinc-200">
@@ -744,44 +1170,29 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
 
             {/* ─── Bottom Meeting Control Bar (Dock) ───────────────────────────── */}
             <footer className="z-30 flex h-20 shrink-0 items-center justify-between border-t border-zinc-800/80 bg-zinc-950/90 px-4 backdrop-blur-md sm:px-6">
-                {/* Left: Quick Simulation State switchers for testing */}
-                <div className="flex items-center gap-1.5">
-                    <span className="hidden text-[11px] font-medium text-zinc-500 lg:inline">
-                        Trạng thái AI:
+                {/* Left: Dynamic AI State Indicator */}
+                <div className="flex items-center gap-2">
+                    <span className="hidden text-[11px] font-medium text-zinc-500 md:inline">
+                        Trạng thái:
                     </span>
-                    <button
-                        type="button"
-                        onClick={() => setAiState("speaking")}
-                        className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
-                            aiState === "speaking"
-                                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                                : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
-                        }`}
-                    >
-                        Nói
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setAiState("listening")}
-                        className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
-                            aiState === "listening"
-                                ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
-                                : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
-                        }`}
-                    >
-                        Nghe
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setAiState("thinking")}
-                        className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
-                            aiState === "thinking"
-                                ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
-                                : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
-                        }`}
-                    >
-                        Nghĩ
-                    </button>
+                    {aiState === "speaking" && (
+                        <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-300">
+                            <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                            <span>AI đang nói</span>
+                        </div>
+                    )}
+                    {aiState === "listening" && (
+                        <div className="flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-300">
+                            <span className="size-2 rounded-full bg-amber-400 animate-ping" />
+                            <span>Đang lắng nghe</span>
+                        </div>
+                    )}
+                    {aiState === "thinking" && (
+                        <div className="flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-2.5 py-1 text-xs font-medium text-purple-300">
+                            <Sparkles className="size-3 animate-spin" />
+                            <span>Đang suy nghĩ</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Center: Meeting Hardware Controls */}
@@ -835,6 +1246,16 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                     >
                         <ClosedCaption className="size-5" />
                     </button>
+
+                    {/* Full Transcript view */}
+                    <button
+                        type="button"
+                        onClick={() => setShowTranscriptModal(true)}
+                        className="hidden sm:flex size-11 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-900 text-zinc-100 transition-all hover:bg-zinc-800"
+                        title="Bản ghi đối thoại"
+                    >
+                        <FileText className="size-5" />
+                    </button>
                 </div>
 
                 {/* Right: Question Navigation Controls */}
@@ -851,7 +1272,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
 
                     <button
                         type="button"
-                        onClick={handleNextQuestion}
+                        onClick={handleAdvanceNext}
                         disabled={currentQuestionIndex === totalQuestions - 1}
                         className="flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-100 px-3 py-2 text-xs font-semibold text-zinc-950 shadow transition-all hover:bg-white disabled:opacity-40"
                     >
@@ -860,6 +1281,157 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                     </button>
                 </div>
             </footer>
+
+            {/* ─── Interview Completion Dialog ─────────────────────────────────── */}
+            {isSessionCompleted && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+                    <div className="w-full max-w-lg rounded-3xl border border-emerald-500/30 bg-zinc-950 p-6 shadow-2xl">
+                        <div className="mb-5 flex flex-col items-center text-center">
+                            <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 ring-8 ring-emerald-500/10">
+                                <Trophy className="size-7" />
+                            </div>
+                            <h3 className="text-xl font-bold tracking-tight text-zinc-100">
+                                Hoàn thành buổi phỏng vấn!
+                            </h3>
+                            <p className="mt-1 text-xs text-zinc-400">
+                                Bạn đã hoàn thành xuất sắc{" "}
+                                {transcriptTurns.length}/{totalQuestions} câu
+                                hỏi cùng {personaMeta.name}.
+                            </p>
+                        </div>
+
+                        {/* Quick Stats Grid */}
+                        <div className="mb-6 grid grid-cols-2 gap-3">
+                            <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 text-center">
+                                <span className="text-[11px] text-zinc-400">
+                                    Thời gian phỏng vấn
+                                </span>
+                                <p className="mt-0.5 text-base font-bold font-mono text-zinc-100">
+                                    {formatTimer(elapsedSeconds)}
+                                </p>
+                            </div>
+                            <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 text-center">
+                                <span className="text-[11px] text-zinc-400">
+                                    Câu hỏi đã trả lời
+                                </span>
+                                <p className="mt-0.5 text-base font-bold text-emerald-400">
+                                    {transcriptTurns.length}/{totalQuestions}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2.5 sm:flex-row sm:justify-end">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsSessionCompleted(false);
+                                    setShowTranscriptModal(true);
+                                }}
+                                className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2.5 text-center text-xs font-semibold text-zinc-200 hover:bg-zinc-800"
+                            >
+                                Xem lại Transcript
+                            </button>
+                            <Link
+                                href={`/interview/${sessionId}/result`}
+                                className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2.5 text-center text-xs font-bold text-white shadow-lg transition-all hover:bg-emerald-500"
+                            >
+                                <span>Xem báo cáo đánh giá STAR</span>
+                                <ChevronRight className="size-4" />
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ─── Full Transcript Review Modal ───────────────────────────────── */}
+            {showTranscriptModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+                    <div className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-3xl border border-zinc-800 bg-zinc-950 shadow-2xl">
+                        <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-4">
+                            <div className="flex items-center gap-2">
+                                <FileText className="size-5 text-emerald-400" />
+                                <div>
+                                    <h3 className="text-base font-bold text-zinc-100">
+                                        Bản ghi phỏng vấn (Transcript)
+                                    </h3>
+                                    <p className="text-xs text-zinc-400">
+                                        Chi tiết các câu hỏi và câu trả lời trong
+                                        phiên này
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowTranscriptModal(false)}
+                                className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="flex-1 space-y-4 overflow-y-auto p-6">
+                            {transcriptTurns.length === 0 ? (
+                                <p className="py-8 text-center text-xs text-zinc-500">
+                                    Chưa có câu trả lời nào được ghi nhận. Hãy
+                                    bắt đầu trả lời câu hỏi!
+                                </p>
+                            ) : (
+                                transcriptTurns.map((turn) => (
+                                    <div
+                                        key={turn.questionIndex}
+                                        className="space-y-2 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <span
+                                                className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${CATEGORY_BADGES[turn.category]}`}
+                                            >
+                                                Câu {turn.questionIndex + 1}:{" "}
+                                                {CATEGORY_NAMES[turn.category]}
+                                            </span>
+                                            <span className="text-[10px] text-zinc-500">
+                                                {turn.answeredAt}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs font-semibold text-zinc-200">
+                                            {turn.questionText}
+                                        </p>
+                                        <div className="rounded-xl bg-zinc-950/70 p-3">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                                                Ứng viên trả lời:
+                                            </span>
+                                            <p className="mt-1 text-xs text-zinc-300 whitespace-pre-wrap">
+                                                {turn.candidateAnswer}
+                                            </p>
+                                        </div>
+                                        <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-3">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                                                Phản hồi từ {personaMeta.name}:
+                                            </span>
+                                            <p className="mt-1 text-xs italic text-zinc-300">
+                                                {turn.interviewerFeedback}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        <div className="flex items-center justify-between border-t border-zinc-800 px-6 py-3.5">
+                            <span className="text-xs text-zinc-400">
+                                Đã hoàn thành {transcriptTurns.length}/
+                                {totalQuestions} câu hỏi
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => setShowTranscriptModal(false)}
+                                className="rounded-xl bg-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-100 hover:bg-zinc-700"
+                            >
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ─── Leave Room Confirmation Dialog ─────────────────────────────── */}
             {showLeaveDialog && (
@@ -881,8 +1453,8 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
 
                         <p className="text-xs text-zinc-400 leading-relaxed">
                             Bạn đang ở câu hỏi {currentQuestionIndex + 1}/
-                            {totalQuestions}. Bạn có thể xem lại bộ câu hỏi hoặc
-                            bắt đầu một phiên phỏng vấn mới.
+                            {totalQuestions}. Đã hoàn thành{" "}
+                            {transcriptTurns.length} câu trả lời.
                         </p>
 
                         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

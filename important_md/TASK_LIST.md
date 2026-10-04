@@ -58,7 +58,8 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 - [x] **Task 3.1:** Dựng giao diện Phòng phỏng vấn giả lập (`/interview/[id]`):
     - _Files:_ `src/app/interview/[id]/page.tsx`, `src/components/interview/InterviewRoom.tsx`.
     - _Tiêu chuẩn hoàn thành (DoD):_ Mô phỏng phòng họp online chuyên nghiệp: Avatar người phỏng vấn tương ứng Persona, khung phụ đề, thanh tiến độ 5 câu hỏi.
-- [ ] **Task 3.2:** Luồng hỏi - đáp từng lượt bằng Text (Base Conversation Loop):
+- [x] **Task 3.2:** Luồng hỏi - đáp từng lượt bằng Text (Base Conversation Loop):
+    - _Files:_ `src/types/interview.ts`, `src/lib/ai/prompts/turn-responder.ts`, `src/app/actions/interview.ts`, `src/components/interview/InterviewRoom.tsx`.
     - _Tiêu chuẩn hoàn thành (DoD):_ AI hiển thị câu hỏi $\rightarrow$ Ứng viên gõ trả lời $\rightarrow$ AI đưa ra phản hồi ngắn dẫn dắt $\rightarrow$ chuyển câu kế tiếp mượt mà.
 - [ ] **Task 3.3:** Tích hợp Web Speech API (Speech-to-Text) tiếng Việt & tiếng Anh:
     - _Files:_ `src/lib/speech/use-speech-recognition.ts`, `src/components/voice/MicButton.tsx`, `src/components/voice/Waveform.tsx`.
