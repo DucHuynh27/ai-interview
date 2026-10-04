@@ -44,7 +44,7 @@ name: CI Pipeline
           - name: Verify Next.js Build
             env:
                 NODE_ENV: production
-                NEXT_TELEMETRY_DISABLE: 1
+                NEXT_TELEMETRY_DISABLED: 1
 
                 GEMINI_API_KEY: "mock-gemini-key-for-ci-build-only"
 
