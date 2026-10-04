@@ -20,7 +20,7 @@
 
 ## 🎯 Giới Thiệu Dự Án
 
-**AI-INTERVIEW** :Web phỏng vấn giả lập AI dành cho sinh viên và người chưa có kinh nghiệm phỏng vấn thực tế. Với mục tiêu: **trải nghiệm mượt mà, bảo mật thông tin cá nhân cao và chi phí vận hành siêu tối ưu**.
+**AI-INTERVIEW**: Web phỏng vấn giả lập AI dành cho sinh viên và người chưa có kinh nghiệm phỏng vấn thực tế. Với mục tiêu: **trải nghiệm mượt mà, bảo mật thông tin cá nhân cao và chi phí vận hành siêu tối ưu**.
 
 ### ✨ Tính Năng Đột Phá (Unique Value Proposition)t
 
