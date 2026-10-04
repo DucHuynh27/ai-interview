@@ -107,8 +107,8 @@ export default function InterviewPreviewPage() {
                 <TriangleAlert className="size-10 text-destructive" />
                 <h1 className="text-lg font-bold">Phiên không hợp lệ</h1>
                 <p className="text-sm text-muted-foreground max-w-xs">
-                    Không tìm thấy dữ liệu phỏng vấn. Vui lòng quay lại và
-                    thiết lập lại.
+                    Không tìm thấy dữ liệu phỏng vấn. Vui lòng quay lại và thiết
+                    lập lại.
                 </p>
                 <Link
                     href="/interview/setup"
@@ -258,8 +258,8 @@ export default function InterviewPreviewPage() {
                                 </CardTitle>
                             </div>
                             <CardDescription className="text-xs">
-                                AI sẽ hỏi theo thứ tự này. Hãy chuẩn bị câu
-                                trả lời theo cấu trúc STAR.
+                                AI sẽ hỏi theo thứ tự này. Hãy chuẩn bị câu trả
+                                lời theo cấu trúc STAR.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-0 p-0">
