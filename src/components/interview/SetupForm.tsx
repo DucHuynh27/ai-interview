@@ -1,7 +1,8 @@
 "use client";
 
+import { generateInterviewQuestions } from "@/app/actions/interview";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
     Card,
     CardContent,
@@ -31,13 +32,17 @@ import {
     FileText,
     Flame,
     HeartHandshake,
+    Loader2,
     ShieldCheck,
     Terminal,
     Upload,
     X,
 } from "lucide-react";
-import Link from "next/link";
-import { useCallback, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useRef, useState, useTransition } from "react";
+
+// Key used to store the preview payload in sessionStorage before navigation.
+export const PREVIEW_SESSION_KEY = "ai-interview:preview";
 
 const MAX_CV_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
@@ -93,6 +98,9 @@ function computeCompletionProgress(form: SetupFormValues): number {
 }
 
 export function SetupForm() {
+    const router = useRouter();
+    const [isPending, startTransition] = useTransition();
+
     const [form, setForm] = useState<SetupFormValues>({
         cvFile: null,
         jobDescription: "",
@@ -100,6 +108,7 @@ export function SetupForm() {
         persona: "friendly_hr",
     });
     const [cvError, setCvError] = useState<string | null>(null);
+    const [submitError, setSubmitError] = useState<string | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -141,6 +150,42 @@ export function SetupForm() {
 
     const selectedPersona = PERSONA_OPTIONS.find((p) => p.id === form.persona)!;
     const SelectedPersonaIcon = PERSONA_ICONS[form.persona];
+
+    function handleStartInterview() {
+        if (!isReadyToStart || !form.cvFile) return;
+        setSubmitError(null);
+
+        startTransition(async () => {
+            const cvBuffer = await form.cvFile!.arrayBuffer();
+
+            const result = await generateInterviewQuestions(
+                cvBuffer,
+                form.jobDescription,
+                form.language,
+                form.persona,
+            );
+
+            if (!result.ok) {
+                setSubmitError(result.error);
+                return;
+            }
+
+            // Generate a temporary session ID until DB is wired up.
+            const sessionId = crypto.randomUUID();
+
+            sessionStorage.setItem(
+                `${PREVIEW_SESSION_KEY}:${sessionId}`,
+                JSON.stringify({
+                    sessionId,
+                    persona: form.persona,
+                    language: form.language,
+                    data: result.data,
+                }),
+            );
+
+            router.push(`/interview/${sessionId}/preview`);
+        });
+    }
 
     return (
         <div className="mx-auto max-w-3xl space-y-8">
@@ -448,27 +493,35 @@ export function SetupForm() {
 
             {/* CTA */}
             <div className="flex flex-col items-center gap-3 pb-8">
-                <Link
-                    href="/interview/preview"
-                    aria-disabled={!isReadyToStart}
-                    className={buttonVariants({
-                        size: "lg",
-                        className: `h-12 w-full max-w-sm px-8 text-sm font-semibold shadow-md sm:w-auto transition-opacity ${
-                            !isReadyToStart
-                                ? "pointer-events-none opacity-40"
-                                : ""
-                        }`,
-                    })}
-                    tabIndex={isReadyToStart ? undefined : -1}
+                <Button
+                    size="lg"
+                    className="h-12 w-full max-w-sm px-8 text-sm font-semibold shadow-md sm:w-auto"
+                    disabled={!isReadyToStart || isPending}
+                    onClick={handleStartInterview}
                 >
-                    Bắt đầu phỏng vấn ngay
-                    <ArrowRight className="size-4" />
-                </Link>
-                {!isReadyToStart && (
+                    {isPending ? (
+                        <>
+                            <Loader2 className="size-4 animate-spin" />
+                            AI đang phân tích CV...
+                        </>
+                    ) : (
+                        <>
+                            Bắt đầu phỏng vấn ngay
+                            <ArrowRight className="size-4" />
+                        </>
+                    )}
+                </Button>
+                {!isReadyToStart && !isPending && (
                     <p className="text-xs text-muted-foreground text-center">
                         Vui lòng tải CV và dán JD (tối thiểu 50 ký tự) để tiếp
                         tục
                     </p>
+                )}
+                {submitError && (
+                    <div className="flex items-center gap-1.5 text-xs text-destructive">
+                        <AlertCircle className="size-3.5 shrink-0" />
+                        {submitError}
+                    </div>
                 )}
             </div>
         </div>
