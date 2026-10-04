@@ -14,7 +14,10 @@ interface TurnPromptOptions {
     isFinalQuestion: boolean;
 }
 
-const PERSONA_INTERVIEW_STYLES: Record<PersonaType, { vi: string; en: string }> = {
+const PERSONA_INTERVIEW_STYLES: Record<
+    PersonaType,
+    { vi: string; en: string }
+> = {
     friendly_hr: {
         vi: `Bạn là Mai Anh - Senior HR Talent Acquisition, mang phong cách thân thiện, cởi mở và luôn khích lệ ứng viên.
 Khi nhận được câu trả lời:
@@ -81,8 +84,8 @@ OUTPUT FORMAT RULES (STRICT):
             ? "Đây là câu hỏi cuối cùng của buổi phỏng vấn. Hãy gửi lời cảm ơn và thông báo rằng toàn bộ câu trả lời đã được ghi nhận để tổng hợp báo cáo kết quả."
             : "This is the final question of the interview. Thank the candidate and state that all responses are recorded for the final evaluation report."
         : isVi
-            ? "Sau đây sẽ là câu hỏi tiếp theo. Hãy nói một câu ngắn gọn dẫn dắt sang câu hỏi kế tiếp."
-            : "The next question follows immediately. Provide a short, natural transition phrase moving to the next question.";
+          ? "Sau đây sẽ là câu hỏi tiếp theo. Hãy nói một câu ngắn gọn dẫn dắt sang câu hỏi kế tiếp."
+          : "The next question follows immediately. Provide a short, natural transition phrase moving to the next question.";
 
     const userPrompt = `CURRENT INTERVIEW QUESTION:
 - Category: ${category}

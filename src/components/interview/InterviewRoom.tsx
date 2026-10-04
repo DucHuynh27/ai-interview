@@ -389,7 +389,6 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
         return () => clearTimeout(timer);
     }, [countdownSec, isPausedCountdown, handleAdvanceNext]);
 
-
     // Handle candidate answering current question
     const handleAnswerInputChange = (val: string) => {
         setDraftAnswers((prev) => ({
@@ -1355,8 +1354,8 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                         Bản ghi phỏng vấn (Transcript)
                                     </h3>
                                     <p className="text-xs text-zinc-400">
-                                        Chi tiết các câu hỏi và câu trả lời trong
-                                        phiên này
+                                        Chi tiết các câu hỏi và câu trả lời
+                                        trong phiên này
                                     </p>
                                 </div>
                             </div>

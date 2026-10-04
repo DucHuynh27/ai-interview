@@ -7,13 +7,13 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 
 ## 📊 Bảng Tổng Quan Tiến Độ
 
-| Sprint       | Tên Sprint                   | Mục Tiêu Chính                                              |  Trạng Thái   | Tiến Độ |
-| :----------- | :--------------------------- | :---------------------------------------------------------- | :-----------: | :-----: |
-| **Sprint 1** | Khởi Tạo Nền Tảng & Setup UI | Dựng khung Next.js 15, UI Upload CV PDF & PII Masking       | ✅ Hoàn thành |  100%   |
-| **Sprint 2** | Não Bộ AI (Gemini 2.0 Flash) | Parse PDF CV, đối soát JD, sinh 5 câu hỏi STAR & Persona    | ✅ Hoàn thành |  100%   |
-| **Sprint 3** | Phòng Phỏng Vấn Giọng Nói    | Turn-based Voice (Web Speech STT & TTS), Waveform UI        | 🟡 Đang thực hiện |  25%   |
-| **Sprint 4** | Đánh Giá STAR & Báo Cáo      | Chấm điểm Situation, Task, Action, Result & Câu mẫu điểm 10 | Chưa bắt đầu  |   0%    |
-| **Sprint 5** | Database, Auth & Pitching    | Google Login, Cloud Database, Dashboard lịch sử & Demo deck | Chưa bắt đầu  |   0%    |
+| Sprint       | Tên Sprint                   | Mục Tiêu Chính                                              |    Trạng Thái     | Tiến Độ |
+| :----------- | :--------------------------- | :---------------------------------------------------------- | :---------------: | :-----: |
+| **Sprint 1** | Khởi Tạo Nền Tảng & Setup UI | Dựng khung Next.js 15, UI Upload CV PDF & PII Masking       |   ✅ Hoàn thành   |  100%   |
+| **Sprint 2** | Não Bộ AI (Gemini 2.0 Flash) | Parse PDF CV, đối soát JD, sinh 5 câu hỏi STAR & Persona    |   ✅ Hoàn thành   |  100%   |
+| **Sprint 3** | Phòng Phỏng Vấn Giọng Nói    | Turn-based Voice (Web Speech STT & TTS), Waveform UI        | 🟡 Đang thực hiện |   25%   |
+| **Sprint 4** | Đánh Giá STAR & Báo Cáo      | Chấm điểm Situation, Task, Action, Result & Câu mẫu điểm 10 |   Chưa bắt đầu    |   0%    |
+| **Sprint 5** | Database, Auth & Pitching    | Google Login, Cloud Database, Dashboard lịch sử & Demo deck |   Chưa bắt đầu    |   0%    |
 
 ---
 

@@ -1,7 +1,4 @@
-export type PersonaType =
-    | "friendly_hr"
-    | "challenging_manager"
-    | "tech_lead";
+export type PersonaType = "friendly_hr" | "challenging_manager" | "tech_lead";
 
 export type LanguageCode = "vi" | "en";
 
@@ -89,4 +86,3 @@ export interface SessionTranscript {
 }
 
 export const TRANSCRIPT_STORAGE_PREFIX = "interview_transcript_";
-

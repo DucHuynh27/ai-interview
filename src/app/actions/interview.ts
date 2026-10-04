@@ -127,7 +127,10 @@ export type SubmitAnswerActionResult = TurnActionSuccess | TurnActionError;
 export async function submitCandidateAnswerTurn(
     submission: CandidateAnswerSubmission,
 ): Promise<SubmitAnswerActionResult> {
-    if (!submission.candidateAnswer || submission.candidateAnswer.trim().length === 0) {
+    if (
+        !submission.candidateAnswer ||
+        submission.candidateAnswer.trim().length === 0
+    ) {
         return {
             ok: false,
             error: "Câu trả lời không được để trống.",
@@ -199,4 +202,3 @@ export async function submitCandidateAnswerTurn(
         },
     };
 }
-
