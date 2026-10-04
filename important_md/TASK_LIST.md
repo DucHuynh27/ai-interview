@@ -11,7 +11,7 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 | :----------- | :--------------------------- | :---------------------------------------------------------- | :---------------: | :-----: |
 | **Sprint 1** | Khởi Tạo Nền Tảng & Setup UI | Dựng khung Next.js 15, UI Upload CV PDF & PII Masking       |   ✅ Hoàn thành   |  100%   |
 | **Sprint 2** | Não Bộ AI (Gemini 2.0 Flash) | Parse PDF CV, đối soát JD, sinh 5 câu hỏi STAR & Persona    |   ✅ Hoàn thành   |  100%   |
-| **Sprint 3** | Phòng Phỏng Vấn Giọng Nói    | Turn-based Voice (Web Speech STT & TTS), Waveform UI        | 🟡 Đang thực hiện |   75%   |
+| **Sprint 3** | Phòng Phỏng Vấn Giọng Nói    | Turn-based Voice (Web Speech STT & TTS), Waveform UI        |   ✅ Hoàn thành   |  100%   |
 | **Sprint 4** | Đánh Giá STAR & Báo Cáo      | Chấm điểm Situation, Task, Action, Result & Câu mẫu điểm 10 |   Chưa bắt đầu    |   0%    |
 | **Sprint 5** | Database, Auth & Pitching    | Google Login, Cloud Database, Dashboard lịch sử & Demo deck |   Chưa bắt đầu    |   0%    |
 
@@ -64,7 +64,7 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 - [x] **Task 3.3:** Tích hợp Web Speech API (Speech-to-Text) tiếng Việt & tiếng Anh:
     - _Files:_ `src/lib/speech/use-speech-recognition.ts`, `src/components/voice/MicButton.tsx`, `src/components/voice/Waveform.tsx`.
     - _Tiêu chuẩn hoàn thành (DoD):_ Bấm nút Mic nói $\rightarrow$ chữ hiện realtime vào ô trả lời $\rightarrow$ có hiệu ứng sóng âm nhấp nhô theo âm lượng.
-- [ ] **Task 3.4:** Tích hợp Text-to-Speech (TTS) phát âm giọng đọc AI:
+- [x] **Task 3.4:** Tích hợp Text-to-Speech (TTS) phát âm giọng đọc AI:
     - _Files:_ `src/lib/speech/use-speech-synthesis.ts`.
     - _Tiêu chuẩn hoàn thành (DoD):_ AI tự động đọc to câu hỏi bằng tiếng Việt hoặc tiếng Anh chuẩn khi đến lượt.
 
