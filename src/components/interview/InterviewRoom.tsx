@@ -233,12 +233,17 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
             return;
         }
 
+        let isCancelled = false;
         let activeStream: MediaStream | null = null;
         const videoElement = videoRef.current;
 
         navigator.mediaDevices
             ?.getUserMedia({ video: true, audio: false })
             .then((stream) => {
+                if (isCancelled) {
+                    stream.getTracks().forEach((track) => track.stop());
+                    return;
+                }
                 activeStream = stream;
                 if (videoElement) {
                     videoElement.srcObject = stream;
@@ -246,10 +251,13 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                 setCameraStream(stream);
             })
             .catch(() => {
-                setCameraStream(null);
+                if (!isCancelled) {
+                    setCameraStream(null);
+                }
             });
 
         return () => {
+            isCancelled = true;
             if (activeStream) {
                 activeStream.getTracks().forEach((track) => track.stop());
             }
@@ -467,7 +475,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                         {[14, 22, 10, 26, 18, 28, 16, 22, 12, 24, 18, 14].map(
                                             (h, i) => (
                                                 <span
-                                                    key={i}
+                                                    key={`bar-${i}`}
                                                     style={{ height: `${h}px` }}
                                                     className="w-0.5 animate-pulse rounded-full bg-emerald-400"
                                                 />

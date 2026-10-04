@@ -148,15 +148,17 @@ export function SetupForm() {
 
     const removeCv = () => setForm((prev) => ({ ...prev, cvFile: null }));
 
-    const selectedPersona = PERSONA_OPTIONS.find((p) => p.id === form.persona)!;
+    const selectedPersona =
+        PERSONA_OPTIONS.find((p) => p.id === form.persona) ?? PERSONA_OPTIONS[0];
     const SelectedPersonaIcon = PERSONA_ICONS[form.persona];
 
     function handleStartInterview() {
-        if (!isReadyToStart || !form.cvFile) return;
+        const cvFile = form.cvFile;
+        if (!isReadyToStart || !cvFile) return;
         setSubmitError(null);
 
         startTransition(async () => {
-            const cvBuffer = await form.cvFile!.arrayBuffer();
+            const cvBuffer = await cvFile.arrayBuffer();
 
             const result = await generateInterviewQuestions(
                 cvBuffer,
@@ -208,7 +210,7 @@ export function SetupForm() {
                                   : true;
                         return (
                             <div
-                                key={idx}
+                                key={step}
                                 className={`flex items-center gap-1 text-[11px] ${done ? "text-primary" : "text-muted-foreground"}`}
                             >
                                 <CheckCircle2 className="size-3" />
