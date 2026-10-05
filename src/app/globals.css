@@ -141,3 +141,22 @@
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
 }
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 12mm 15mm 15mm 15mm;
+    }
+
+    body {
+        background-color: #ffffff !important;
+        color: #09090b !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .print-break-inside-avoid {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+}
