@@ -68,15 +68,15 @@ export function QuestionFeedbackCard({
     ];
 
     return (
-        <Card className="overflow-hidden border-zinc-800 bg-zinc-950/60 transition-all hover:border-zinc-700/80">
+        <Card className="overflow-hidden border-zinc-800 bg-zinc-950/60 transition-all hover:border-zinc-700/80 print:break-inside-avoid print:bg-white print:border-zinc-300 print:text-zinc-900 print:shadow-none">
             {/* Header / Accordion trigger */}
             <CardHeader
-                className="cursor-pointer border-b border-zinc-800/60 p-5 transition-colors hover:bg-zinc-900/40"
+                className="cursor-pointer border-b border-zinc-800/60 p-5 transition-colors hover:bg-zinc-900/40 print:border-zinc-200 print:bg-zinc-50"
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
-                        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-zinc-900 font-mono text-xs font-bold text-zinc-300 border border-zinc-800">
+                        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-zinc-900 font-mono text-xs font-bold text-zinc-300 border border-zinc-800 print:bg-white print:border-zinc-300 print:text-zinc-800">
                             {feedback.questionIndex}
                         </span>
                         <div className="space-y-1.5">
@@ -87,11 +87,11 @@ export function QuestionFeedbackCard({
                                 >
                                     {categoryMeta.label}
                                 </Badge>
-                                <span className="font-mono text-xs font-bold text-emerald-400">
+                                <span className="font-mono text-xs font-bold text-emerald-400 print:text-emerald-700">
                                     {feedback.score}/100 điểm
                                 </span>
                             </div>
-                            <h4 className="text-sm font-semibold text-zinc-100 leading-snug">
+                            <h4 className="text-sm font-semibold text-zinc-100 leading-snug print:text-zinc-900">
                                 {feedback.questionText}
                             </h4>
                         </div>
@@ -103,7 +103,7 @@ export function QuestionFeedbackCard({
                             {starScores.map((s) => (
                                 <span
                                     key={s.label}
-                                    className="rounded bg-zinc-900 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400 border border-zinc-800"
+                                    className="rounded bg-zinc-900 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400 border border-zinc-800 print:bg-white print:border-zinc-300 print:text-zinc-700"
                                 >
                                     {s.label[0]}:{s.score}
                                 </span>
@@ -112,7 +112,7 @@ export function QuestionFeedbackCard({
 
                         <button
                             type="button"
-                            className="rounded-lg p-1 text-zinc-400 hover:text-zinc-200"
+                            className="rounded-lg p-1 text-zinc-400 hover:text-zinc-200 print:hidden"
                             aria-label="Toggle details"
                         >
                             {isOpen ? (
@@ -125,120 +125,118 @@ export function QuestionFeedbackCard({
                 </div>
             </CardHeader>
 
-            {/* Expandable Body */}
-            {isOpen && (
-                <CardContent className="space-y-5 p-5 sm:p-6">
-                    {/* Candidate Answer Transcript */}
-                    <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-4">
-                        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-zinc-400">
-                            <User className="size-3.5 text-zinc-400" />
-                            <span>Câu trả lời của bạn:</span>
+            {/* Expandable Body (luôn hiển thị khi in để xuất trọn vẹn PDF) */}
+            <CardContent className={`space-y-5 p-5 sm:p-6 ${isOpen ? "block" : "hidden print:block"}`}>
+                {/* Candidate Answer Transcript */}
+                <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-4 print:bg-zinc-50 print:border-zinc-200">
+                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-zinc-400 print:text-zinc-600">
+                        <User className="size-3.5 text-zinc-400 print:text-zinc-600" />
+                        <span>Câu trả lời của bạn:</span>
+                    </div>
+                    <p className="mt-2 text-xs sm:text-sm leading-relaxed text-zinc-200 italic print:text-zinc-800">
+                        &ldquo;
+                        {feedback.candidateAnswer ||
+                            "(Ứng viên không có câu trả lời)"}
+                        &rdquo;
+                    </p>
+                </div>
+
+                {/* STAR 4 Pillar Badges */}
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {starScores.map((s) => (
+                        <div
+                            key={s.label}
+                            className="flex items-center justify-between rounded-lg border border-zinc-800/80 bg-zinc-900/60 px-3 py-2 text-xs print:bg-zinc-50 print:border-zinc-200"
+                        >
+                            <span className="text-zinc-400 print:text-zinc-600">{s.label}</span>
+                            <span className="font-mono font-bold text-emerald-400 print:text-emerald-700">
+                                {s.score}/10
+                            </span>
                         </div>
-                        <p className="mt-2 text-xs sm:text-sm leading-relaxed text-zinc-200 italic">
-                            &ldquo;
-                            {feedback.candidateAnswer ||
-                                "(Ứng viên không có câu trả lời)"}
-                            &rdquo;
-                        </p>
+                    ))}
+                </div>
+
+                {/* Strengths & Weaknesses breakdown */}
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {/* Strengths */}
+                    <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3.5 print:bg-emerald-50/40 print:border-emerald-200">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 print:text-emerald-700">
+                            <CheckCircle2 className="size-3.5" />
+                            <span>Điểm tốt:</span>
+                        </div>
+                        <ul className="mt-2 space-y-1.5 text-xs text-zinc-300 print:text-zinc-800">
+                            {feedback.strengths.map((str, i) => (
+                                <li
+                                    key={i}
+                                    className="flex items-start gap-1.5"
+                                >
+                                    <span className="text-emerald-400 print:text-emerald-700">
+                                        •
+                                    </span>
+                                    <span>{str}</span>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
 
-                    {/* STAR 4 Pillar Badges on Mobile */}
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                        {starScores.map((s) => (
-                            <div
-                                key={s.label}
-                                className="flex items-center justify-between rounded-lg border border-zinc-800/80 bg-zinc-900/60 px-3 py-2 text-xs"
-                            >
-                                <span className="text-zinc-400">{s.label}</span>
-                                <span className="font-mono font-bold text-emerald-400">
-                                    {s.score}/10
+                    {/* Weaknesses */}
+                    <div className="rounded-xl border border-amber-500/15 bg-amber-500/5 p-3.5 print:bg-amber-50/40 print:border-amber-200">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400 print:text-amber-700">
+                            <AlertTriangle className="size-3.5" />
+                            <span>Cần bổ sung:</span>
+                        </div>
+                        <ul className="mt-2 space-y-1.5 text-xs text-zinc-300 print:text-zinc-800">
+                            {feedback.weaknesses.map((w, i) => (
+                                <li
+                                    key={i}
+                                    className="flex items-start gap-1.5"
+                                >
+                                    <span className="text-amber-400 print:text-amber-700">
+                                        •
+                                    </span>
+                                    <span>{w}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+
+                {/* Khung Câu trả lời mẫu điểm 10 chuẩn STAR */}
+                {feedback.suggestedAnswer && (
+                    <div className="rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-zinc-900/90 to-zinc-900/90 p-4 shadow-sm print:bg-amber-50/40 print:border-amber-300">
+                        <div className="flex items-center justify-between gap-2 border-b border-amber-500/20 pb-2.5 print:border-amber-200">
+                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400 print:text-amber-800">
+                                <Crown className="size-4" />
+                                <span>
+                                    Câu trả lời mẫu điểm 10 (Chuẩn STAR):
                                 </span>
                             </div>
-                        ))}
-                    </div>
-
-                    {/* Strengths & Weaknesses breakdown */}
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {/* Strengths */}
-                        <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3.5">
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
-                                <CheckCircle2 className="size-3.5" />
-                                <span>Điểm tốt:</span>
-                            </div>
-                            <ul className="mt-2 space-y-1.5 text-xs text-zinc-300">
-                                {feedback.strengths.map((str, i) => (
-                                    <li
-                                        key={i}
-                                        className="flex items-start gap-1.5"
-                                    >
+                            <button
+                                type="button"
+                                onClick={handleCopy}
+                                className="flex items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[11px] font-semibold text-amber-300 transition-colors hover:bg-amber-500/20 hover:text-amber-200 print:hidden"
+                            >
+                                {copied ? (
+                                    <>
+                                        <Check className="size-3 text-emerald-400" />
                                         <span className="text-emerald-400">
-                                            •
+                                            Đã chép
                                         </span>
-                                        <span>{str}</span>
-                                    </li>
-                                ))}
-                            </ul>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Copy className="size-3" />
+                                        <span>Sao chép</span>
+                                    </>
+                                )}
+                            </button>
                         </div>
-
-                        {/* Weaknesses */}
-                        <div className="rounded-xl border border-amber-500/15 bg-amber-500/5 p-3.5">
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
-                                <AlertTriangle className="size-3.5" />
-                                <span>Cần bổ sung:</span>
-                            </div>
-                            <ul className="mt-2 space-y-1.5 text-xs text-zinc-300">
-                                {feedback.weaknesses.map((w, i) => (
-                                    <li
-                                        key={i}
-                                        className="flex items-start gap-1.5"
-                                    >
-                                        <span className="text-amber-400">
-                                            •
-                                        </span>
-                                        <span>{w}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                        <p className="mt-3 text-xs sm:text-sm leading-relaxed text-zinc-200 print:text-zinc-800">
+                            {feedback.suggestedAnswer}
+                        </p>
                     </div>
-
-                    {/* Khung Câu trả lời mẫu điểm 10 chuẩn STAR */}
-                    {feedback.suggestedAnswer && (
-                        <div className="rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-zinc-900/90 to-zinc-900/90 p-4 shadow-sm">
-                            <div className="flex items-center justify-between gap-2 border-b border-amber-500/20 pb-2.5">
-                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
-                                    <Crown className="size-4" />
-                                    <span>
-                                        Câu trả lời mẫu điểm 10 (Chuẩn STAR):
-                                    </span>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={handleCopy}
-                                    className="flex items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[11px] font-semibold text-amber-300 transition-colors hover:bg-amber-500/20 hover:text-amber-200"
-                                >
-                                    {copied ? (
-                                        <>
-                                            <Check className="size-3 text-emerald-400" />
-                                            <span className="text-emerald-400">
-                                                Đã chép
-                                            </span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Copy className="size-3" />
-                                            <span>Sao chép</span>
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                            <p className="mt-3 text-xs sm:text-sm leading-relaxed text-zinc-200">
-                                {feedback.suggestedAnswer}
-                            </p>
-                        </div>
-                    )}
-                </CardContent>
-            )}
+                )}
+            </CardContent>
         </Card>
     );
 }
