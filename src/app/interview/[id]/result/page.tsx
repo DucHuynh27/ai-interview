@@ -13,9 +13,9 @@ export default async function InterviewResultPage({
     const { id: sessionId } = await params;
 
     return (
-        <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-100 selection:bg-emerald-500/30">
+        <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-100 selection:bg-emerald-500/30 print:bg-white print:text-zinc-900 print:min-h-0">
             {/* Top Navigation Bar */}
-            <header className="sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md">
+            <header className="sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md print:hidden">
                 <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
                     <div className="flex items-center gap-3">
                         <Link
@@ -49,8 +49,8 @@ export default async function InterviewResultPage({
             </header>
 
             {/* Main Content Area */}
-            <main className="flex-1 px-4 py-8 sm:px-6">
-                <div className="mx-auto max-w-6xl">
+            <main className="flex-1 px-4 py-8 sm:px-6 print:p-0 print:m-0">
+                <div className="mx-auto max-w-6xl print:max-w-none">
                     <InterviewResultView sessionId={sessionId} />
                 </div>
             </main>
