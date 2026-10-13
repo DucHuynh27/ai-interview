@@ -1,6 +1,7 @@
 "use client";
 
 import { submitCandidateAnswerTurn } from "@/app/actions/interview";
+import { saveMessageAction } from "@/app/actions/persistence";
 import { PREVIEW_SESSION_KEY } from "@/components/interview/SetupForm";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -51,7 +52,7 @@ import {
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
-// ─── Default Mock Data (Fallback khi vào thẳng link phòng) ───────────────────
+// ─── Dữ liệu mock mặc định (dự phòng khi vào thẳng link phòng) ───────────────
 
 const MOCK_QUESTIONS: InterviewQuestion[] = [
     {
@@ -119,7 +120,7 @@ const DEFAULT_MOCK_SESSION: InterviewSessionData = {
     },
 };
 
-// ─── Persona Visual Configuration ───────────────────────────────────────────
+// ─── Cấu hình hiển thị theo Persona ─────────────────────────────────────────
 
 interface PersonaPresentation {
     name: string;
@@ -188,13 +189,13 @@ interface InterviewRoomProps {
 }
 
 export function InterviewRoom({ sessionId }: InterviewRoomProps) {
-    // ─── Session State ────────────────────────────────────────────────────────
+    // ─── State phiên phỏng vấn ────────────────────────────────────────────────
     const [sessionData, setSessionData] =
         useState<InterviewSessionData>(DEFAULT_MOCK_SESSION);
     const [isDemoFallback, setIsDemoFallback] = useState(false);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-    // ─── Conversation Turns & Transcript State ────────────────────────────────
+    // ─── State lượt hội thoại & transcript ────────────────────────────────────
     const [transcriptTurns, setTranscriptTurns] = useState<
         InterviewTranscriptTurn[]
     >([]);
@@ -208,11 +209,11 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [isPendingSubmit, startSubmitTransition] = useTransition();
 
-    // ─── Completion & Modals ──────────────────────────────────────────────────
+    // ─── State hoàn tất & modal ───────────────────────────────────────────────
     const [isSessionCompleted, setIsSessionCompleted] = useState(false);
     const [showTranscriptModal, setShowTranscriptModal] = useState(false);
 
-    // ─── Room Controls & Hardware ─────────────────────────────────────────────
+    // ─── Điều khiển phòng & phần cứng ─────────────────────────────────────────
     const [isMicOn, setIsMicOn] = useState(false);
     const [isCameraOn, setIsCameraOn] = useState(true);
     const [showCaptions, setShowCaptions] = useState(true);
@@ -221,13 +222,13 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
     const [showQuestionDrawer, setShowQuestionDrawer] = useState(false);
     const [showLeaveDialog, setShowLeaveDialog] = useState(false);
 
-    // ─── AI Persona State (Speaking / Listening / Thinking) ───────────────────
+    // ─── Trạng thái AI (đang nói / đang nghe / đang suy nghĩ) ─────────────────
     const [aiState, setAiState] = useState<AiState>("speaking");
 
-    // ─── Live Timer (Elapsed time) ────────────────────────────────────────────
+    // ─── Đồng hồ đếm thời gian thực tế ────────────────────────────────────────
     const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-    // ─── Candidate Camera Video Feed ──────────────────────────────────────────
+    // ─── Luồng video camera ứng viên ──────────────────────────────────────────
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
 
@@ -277,21 +278,20 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
         persona: sessionData.persona,
     });
 
-    // Track which question index has already been read aloud to avoid re-firing
-    // on unrelated re-renders (e.g. countdown ticks, transcript updates).
+    // Đánh dấu câu hỏi đã được đọc to, tránh đọc lại khi re-render không liên
+    // quan (ví dụ tick đếm ngược, cập nhật transcript).
     const spokenQuestionIndexRef = useRef<number>(-1);
 
-    // Auto-speak the current question whenever the index advances
+    // Tự động đọc câu hỏi hiện tại mỗi khi index đổi.
     useEffect(() => {
         if (isSessionCompleted) return;
         if (spokenQuestionIndexRef.current === currentQuestionIndex) return;
 
-        // Only speak when it is AI's turn (entering a new question)
+        // Chỉ đọc khi tới lượt AI (vừa chuyển sang câu hỏi mới).
         if (aiState !== "speaking") return;
 
-        // Guard: questions may not be loaded yet on first hydration tick
-        const sessionQuestions =
-            sessionData.data.questions || MOCK_QUESTIONS;
+        // Phòng hờ: ở tick hydration đầu, câu hỏi có thể chưa được nạp.
+        const sessionQuestions = sessionData.data.questions || MOCK_QUESTIONS;
         const question = sessionQuestions[currentQuestionIndex];
         if (!question) return;
 
@@ -303,13 +303,13 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                 : question.questionVi;
 
         speak(questionText, () => {
-            // After AI finishes reading, flip state so candidate can answer
+            // AI đọc xong thì chuyển lượt để ứng viên trả lời.
             setAiState("listening");
         });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentQuestionIndex, aiState, isSessionCompleted, sessionData]);
 
-    // Auto-speak AI feedback after each submitted answer
+    // Tự động đọc phản hồi của AI sau mỗi câu trả lời được gửi.
     const prevFeedbackRef = useRef<string | null>(null);
     useEffect(() => {
         if (!activeTurnFeedback) return;
@@ -317,17 +317,17 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
 
         prevFeedbackRef.current = activeTurnFeedback.fullResponse;
         speak(activeTurnFeedback.fullResponse);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTurnFeedback]);
 
-    // Cancel TTS whenever the candidate starts typing or speaking (mic on)
+    // Huỷ TTS khi ứng viên bắt đầu gõ hoặc nói (mic bật).
     useEffect(() => {
         if (isMicOn || aiState === "listening") {
             cancelSpeech();
         }
     }, [isMicOn, aiState, cancelSpeech]);
 
-    // Load session data and previous transcripts from sessionStorage
+    // Nạp dữ liệu phiên và transcript trước đó từ sessionStorage.
     useEffect(() => {
         const rawSession = sessionStorage.getItem(
             `${PREVIEW_SESSION_KEY}:${sessionId}`,
@@ -365,13 +365,13 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                         }
                     }
                 } catch {
-                    // Ignore corrupted transcript cache
+                    // Bỏ qua cache transcript bị hỏng.
                 }
             }
         });
     }, [sessionId]);
 
-    // Timer effect
+    // Đồng hồ đếm giờ.
     useEffect(() => {
         const timer = setInterval(() => {
             setElapsedSeconds((prev) => prev + 1);
@@ -379,7 +379,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
         return () => clearInterval(timer);
     }, []);
 
-    // Camera hardware stream setup
+    // Thiết lập luồng camera từ phần cứng.
     useEffect(() => {
         if (!isCameraOn) {
             return;
@@ -427,7 +427,6 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
     const PersonaIcon = personaMeta.icon;
     const isEnglishSession = sessionData.language === "en";
 
-    // Completed turn for the currently selected question (if previously answered)
     const existingTurnForCurrent = transcriptTurns.find(
         (t) => t.questionIndex === currentQuestionIndex,
     );
@@ -472,7 +471,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
         }
     };
 
-    // Auto-advance countdown timer effect
+    // Bộ đếm tự động chuyển câu tiếp theo.
     useEffect(() => {
         if (countdownSec === null || isPausedCountdown) {
             return;
@@ -489,7 +488,6 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
         return () => clearTimeout(timer);
     }, [countdownSec, isPausedCountdown, handleAdvanceNext]);
 
-    // Handle candidate answering current question
     const handleAnswerInputChange = (val: string) => {
         setDraftAnswers((prev) => ({
             ...prev,
@@ -561,7 +559,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
 
             setTranscriptTurns(updatedTurns);
 
-            // Persist entire transcript to sessionStorage for Sprint 4 evaluation
+            // Lưu toàn bộ transcript vào sessionStorage để Sprint 4 chấm điểm.
             const sessionTranscript: SessionTranscript = {
                 sessionId,
                 persona,
@@ -577,6 +575,20 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                 `${TRANSCRIPT_STORAGE_PREFIX}${sessionId}`,
                 JSON.stringify(sessionTranscript),
             );
+
+            // Lưu lượt hội thoại vào DB (fail-soft: bỏ qua nếu guest/chưa có session).
+            void saveMessageAction({
+                sessionId,
+                role: "CANDIDATE",
+                content: candidateAnswer,
+                orderIndex: currentQuestionIndex * 2,
+            });
+            void saveMessageAction({
+                sessionId,
+                role: "INTERVIEWER",
+                content: feedbackData.fullResponse,
+                orderIndex: currentQuestionIndex * 2 + 1,
+            });
 
             if (isFinalQuestion) {
                 setIsSessionCompleted(true);
@@ -596,9 +608,8 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
 
     return (
         <div className="relative flex h-screen w-full flex-col overflow-hidden bg-zinc-950 font-sans text-zinc-100 select-none">
-            {/* ─── Top Header: Meeting Room Status & Question Progress ────────── */}
+            {/* ─── Header: trạng thái phòng & tiến độ câu hỏi ──────────────── */}
             <header className="z-30 flex h-14 shrink-0 items-center justify-between border-b border-zinc-800/80 bg-zinc-950/90 px-4 backdrop-blur-md sm:px-6">
-                {/* Left: Meeting Branding & Persona Info */}
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
                         <span className="relative flex size-2.5">
@@ -638,7 +649,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                     )}
                 </div>
 
-                {/* Center: 5 Questions Progress Steps */}
+                {/* ─── Thanh tiến độ 5 câu hỏi ─────────────────────────────── */}
                 <div className="flex items-center gap-1.5 sm:gap-2">
                     {questions.map((q, idx) => {
                         const isDone = transcriptTurns.some(
@@ -675,7 +686,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                     })}
                 </div>
 
-                {/* Right: Drawer Toggle, Transcript & Exit Button */}
+                {/* ─── Nút mở drawer, xem transcript & rời phòng ────────────── */}
                 <div className="flex items-center gap-2">
                     <button
                         type="button"
@@ -710,16 +721,14 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                 </div>
             </header>
 
-            {/* ─── Main Meeting Stage: AI Video + Candidate PiP + Subtitles / Text Input ── */}
+            {/* ─── Sân khấu chính: video AI + PiP ứng viên + phụ đề / ô nhập ── */}
             <main className="relative flex flex-1 items-center justify-center overflow-hidden p-3 sm:p-5">
-                {/* AI Interviewer Video Stage */}
                 <div className="relative flex size-full max-w-6xl flex-col items-center justify-center rounded-3xl border border-zinc-800/80 bg-gradient-to-b from-zinc-900/90 via-zinc-950 to-zinc-950 p-6 shadow-2xl overflow-hidden">
-                    {/* Ambient Stage Lighting Glow based on Persona */}
                     <div
                         className={`pointer-events-none absolute -top-40 size-96 rounded-full bg-gradient-to-b ${personaMeta.avatarColor} opacity-15 blur-3xl`}
                     />
 
-                    {/* Candidate Video Feed (Picture-in-Picture at Top Right) */}
+                    {/* Luồng video ứng viên (Picture-in-Picture góc trên phải) */}
                     <div className="group absolute top-4 right-4 z-20 h-28 w-40 sm:h-36 sm:w-52 overflow-hidden rounded-2xl border-2 border-zinc-700/80 bg-zinc-900 shadow-xl transition-all hover:border-zinc-500">
                         {isCameraActive ? (
                             <video
@@ -742,7 +751,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                             </div>
                         )}
 
-                        {/* Candidate Name & Mic Badge */}
+                        {/* Huy hiệu tên & micro của ứng viên */}
                         <div className="absolute right-1.5 bottom-1.5 left-1.5 flex items-center justify-between rounded-lg bg-zinc-950/80 px-2 py-0.5 backdrop-blur-md">
                             <span className="truncate text-[10px] font-medium text-zinc-200">
                                 Bạn (Ứng viên)
@@ -766,11 +775,10 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                         </div>
                     </div>
 
-                    {/* AI Interviewer Main Visual / Avatar Presentation */}
+                    {/* Hình ảnh / avatar chính của người phỏng vấn AI */}
                     <div className="relative z-10 -mt-10 flex flex-col items-center text-center">
-                        {/* Avatar container with dynamic audio pulsating waves */}
                         <div className="relative mb-4 flex items-center justify-center">
-                            {/* Pulsing rings when AI is speaking */}
+                            {/* Vòng xung khi AI đang nói */}
                             {aiState === "speaking" && (
                                 <>
                                     <span className="absolute size-32 animate-ping rounded-full bg-emerald-500/20 duration-1000" />
@@ -779,7 +787,6 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                 </>
                             )}
 
-                            {/* Outer avatar ring */}
                             <div
                                 className={`relative flex size-28 items-center justify-center rounded-full border-2 bg-gradient-to-tr ${personaMeta.avatarColor} p-1 shadow-2xl transition-all ${personaMeta.borderColor} ${personaMeta.glowStyle}`}
                             >
@@ -787,14 +794,14 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                     <PersonaIcon className="size-12 text-zinc-100" />
                                 </div>
 
-                                {/* Active Speaking / Status Dot */}
+                                {/* Chấm trạng thái đang nói */}
                                 <div className="absolute right-1 bottom-1 flex size-5 items-center justify-center rounded-full border-2 border-zinc-950 bg-emerald-500">
                                     <span className="size-2 rounded-full bg-white" />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Name & Title Plate */}
+                        {/* Bảng tên & chức danh */}
                         <div className="space-y-1">
                             <div className="flex items-center justify-center gap-2">
                                 <h2 className="text-lg font-bold tracking-tight text-zinc-100 sm:text-xl">
@@ -811,7 +818,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                             </p>
                         </div>
 
-                        {/* AI Audio Waveform Visualizer & State Badge */}
+                        {/* Visualizer sóng âm & huy hiệu trạng thái AI */}
                         <div className="mt-3 flex flex-col items-center gap-2">
                             {aiState === "speaking" && (
                                 <div className="flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
@@ -821,7 +828,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                             ? `${personaMeta.name} đang phản hồi...`
                                             : "AI đang đọc câu hỏi..."}
                                     </span>
-                                    {/* 10 Animated Waveform Bars */}
+                                    {/* 10 thanh sóng âm động */}
                                     <div className="ml-2 flex items-center gap-0.5">
                                         {[
                                             14, 22, 10, 26, 18, 24, 16, 22, 12,
@@ -860,7 +867,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                         </div>
                     </div>
 
-                    {/* Interviewer Nameplate Tag (Bottom Left) */}
+                    {/* Thẻ tên người phỏng vấn (góc dưới trái) */}
                     <div className="absolute bottom-4 left-4 z-20 hidden items-center gap-2 rounded-xl border border-zinc-800/80 bg-zinc-950/80 px-3 py-1.5 backdrop-blur-md sm:flex">
                         <div className="flex size-2 rounded-full bg-emerald-500" />
                         <span className="text-xs font-semibold text-zinc-200">
@@ -871,11 +878,11 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                         </div>
                     </div>
 
-                    {/* ─── Main Conversation Panel: Subtitles + Text Input + Turn Feedback ─ */}
+                    {/* ─── Bảng hội thoại chính: phụ đề + ô nhập + phản hồi ─── */}
                     {showCaptions && (
                         <div className="absolute bottom-3 left-1/2 z-20 w-[94%] max-w-3xl -translate-x-1/2">
                             <div className="relative max-h-[58vh] overflow-y-auto rounded-2xl border border-zinc-700/80 bg-zinc-950/90 p-3.5 shadow-2xl backdrop-blur-xl transition-all sm:p-5">
-                                {/* Subtitle Header: Question index, category, toggle bilingual & goal */}
+                                {/* Header phụ đề: chỉ số câu, loại câu, toggle song ngữ & mục tiêu */}
                                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800/80 pb-2">
                                     <div className="flex items-center gap-2">
                                         <Badge
@@ -943,7 +950,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                             : currentQuestion.questionVi}
                                     </p>
 
-                                    {/* Bilingual translation display */}
+                                    {/* Bản dịch song ngữ */}
                                     {showBilingual && (
                                         <p className="border-t border-zinc-800/60 pt-1.5 text-xs italic leading-relaxed text-zinc-400">
                                             {isEnglishSession
@@ -952,7 +959,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                         </p>
                                     )}
 
-                                    {/* Collapsible STAR Goal Hint */}
+                                    {/* Gợi ý mục tiêu STAR (có thể thu gọn) */}
                                     {showGoalHint && (
                                         <div className="rounded-xl border border-primary/20 bg-primary/5 p-2.5 text-xs text-primary-foreground">
                                             <div className="flex items-start gap-2">
@@ -973,7 +980,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                     )}
                                 </div>
 
-                                {/* ─── Active Turn Feedback from AI (After Candidate Submits) ── */}
+                                {/* ─── Phản hồi của AI sau khi ứng viên gửi câu trả lời ── */}
                                 {activeTurnFeedback ? (
                                     <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-950/40 p-3 backdrop-blur-md">
                                         <div className="mb-2 flex items-center justify-between gap-2">
@@ -1069,7 +1076,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                         </div>
                                     </div>
                                 ) : existingTurnForCurrent ? (
-                                    /* ─── Previously Answered Question Review View ──────────────── */
+                                    /* ─── Xem lại câu hỏi đã trả lời trước đó ───────────────── */
                                     <div className="mt-3 space-y-2 rounded-xl border border-zinc-800/80 bg-zinc-900/60 p-3">
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs font-semibold text-zinc-300">
@@ -1098,7 +1105,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                                         </div>
                                     </div>
                                 ) : (
-                                    /* ─── Candidate Text Input Form (Turn-based Answer Loop) ────── */
+                                    /* ─── Form nhập câu trả lời của ứng viên (vòng hỏi-đáp) ──── */
                                     <div className="mt-2.5 space-y-2 border-t border-zinc-800/80 pt-2.5">
                                         <div className="relative">
                                             <Textarea
@@ -1197,7 +1204,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                     )}
                 </div>
 
-                {/* ─── Questions List Drawer (Slide-out panel) ─────────────── */}
+                {/* ─── Drawer danh sách câu hỏi (panel trượt ra) ───────────── */}
                 {showQuestionDrawer && (
                     <aside className="absolute top-0 right-0 z-40 flex h-full w-80 flex-col border-l border-zinc-800 bg-zinc-950/95 p-4 shadow-2xl backdrop-blur-xl sm:w-96">
                         <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
@@ -1280,9 +1287,9 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                 )}
             </main>
 
-            {/* ─── Bottom Meeting Control Bar (Dock) ───────────────────────────── */}
+            {/* ─── Thanh điều khiển cuộc họp (dock dưới cùng) ─────────────────── */}
             <footer className="z-30 flex h-20 shrink-0 items-center justify-between border-t border-zinc-800/80 bg-zinc-950/90 px-4 backdrop-blur-md sm:px-6">
-                {/* Left: Dynamic AI State Indicator */}
+                {/* Chỉ báo trạng thái AI động */}
                 <div className="flex items-center gap-2">
                     <span className="hidden text-[11px] font-medium text-zinc-500 md:inline">
                         Trạng thái:
@@ -1307,9 +1314,8 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                     )}
                 </div>
 
-                {/* Center: Meeting Hardware Controls */}
+                {/* Cụm điều khiển phần cứng cuộc họp */}
                 <div className="flex items-center gap-2 sm:gap-3">
-                    {/* Mic toggle */}
                     <button
                         type="button"
                         onClick={() => setIsMicOn((prev) => !prev)}
@@ -1327,7 +1333,6 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                         )}
                     </button>
 
-                    {/* Camera toggle */}
                     <button
                         type="button"
                         onClick={() => setIsCameraOn((prev) => !prev)}
@@ -1345,7 +1350,6 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                         )}
                     </button>
 
-                    {/* AI Voice: Replay question */}
                     <button
                         type="button"
                         onClick={replayQuestion}
@@ -1355,7 +1359,6 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                         <Volume2 className="size-5" />
                     </button>
 
-                    {/* AI Voice: Mute/Unmute toggle */}
                     <button
                         type="button"
                         onClick={toggleTtsMute}
@@ -1373,7 +1376,6 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                         )}
                     </button>
 
-                    {/* Closed Captions toggle */}
                     <button
                         type="button"
                         onClick={() => setShowCaptions((prev) => !prev)}
@@ -1387,7 +1389,6 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                         <ClosedCaption className="size-5" />
                     </button>
 
-                    {/* Full Transcript view */}
                     <button
                         type="button"
                         onClick={() => setShowTranscriptModal(true)}
@@ -1398,7 +1399,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                     </button>
                 </div>
 
-                {/* Right: Question Navigation Controls */}
+                {/* Điều hướng chuyển câu hỏi */}
                 <div className="flex items-center gap-2">
                     <button
                         type="button"
@@ -1422,7 +1423,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                 </div>
             </footer>
 
-            {/* ─── Interview Completion Dialog ─────────────────────────────────── */}
+            {/* ─── Hộp thoại hoàn thành phỏng vấn ─────────────────────────────── */}
             {isSessionCompleted && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
                     <div className="w-full max-w-lg rounded-3xl border border-emerald-500/30 bg-zinc-950 p-6 shadow-2xl">
@@ -1440,7 +1441,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                             </p>
                         </div>
 
-                        {/* Quick Stats Grid */}
+                        {/* Lưới thống kê nhanh */}
                         <div className="mb-6 grid grid-cols-2 gap-3">
                             <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 text-center">
                                 <span className="text-[11px] text-zinc-400">
@@ -1483,7 +1484,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                 </div>
             )}
 
-            {/* ─── Full Transcript Review Modal ───────────────────────────────── */}
+            {/* ─── Modal xem lại toàn bộ transcript ──────────────────────────── */}
             {showTranscriptModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
                     <div className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-3xl border border-zinc-800 bg-zinc-950 shadow-2xl">
@@ -1573,7 +1574,7 @@ export function InterviewRoom({ sessionId }: InterviewRoomProps) {
                 </div>
             )}
 
-            {/* ─── Leave Room Confirmation Dialog ─────────────────────────────── */}
+            {/* ─── Hộp thoại xác nhận rời phòng ──────────────────────────────── */}
             {showLeaveDialog && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
                     <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl">

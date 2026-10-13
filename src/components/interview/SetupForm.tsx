@@ -1,6 +1,7 @@
 "use client";
 
 import { generateInterviewQuestions } from "@/app/actions/interview";
+import { saveInterviewSessionAction } from "@/app/actions/persistence";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +11,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -41,7 +43,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState, useTransition } from "react";
 
-// Key used to store the preview payload in sessionStorage before navigation.
+// Khoá dùng để lưu payload preview vào sessionStorage trước khi điều hướng.
 export const PREVIEW_SESSION_KEY = "ai-interview:preview";
 
 const MAX_CV_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -84,15 +86,16 @@ const PERSONA_ICONS: Record<PersonaType, typeof HeartHandshake> = {
 
 const COMPLETION_STEPS = [
     "Tải CV PDF",
-    "Dán Job Description",
+    "Nhập vị trí & JD",
     "Chọn người phỏng vấn",
 ];
 
 function computeCompletionProgress(form: SetupFormValues): number {
     const steps = [
         form.cvFile !== null,
-        form.jobDescription.trim().length >= 50,
-        true, // persona luôn có giá trị mặc định
+        form.jobTitle.trim().length >= 2 &&
+            form.jobDescription.trim().length >= 50,
+        true, // persona luôn có giá trị mặc định nên luôn tính là hoàn thành
     ];
     return Math.round((steps.filter(Boolean).length / steps.length) * 100);
 }
@@ -103,6 +106,7 @@ export function SetupForm() {
 
     const [form, setForm] = useState<SetupFormValues>({
         cvFile: null,
+        jobTitle: "",
         jobDescription: "",
         language: "vi",
         persona: "friendly_hr",
@@ -114,7 +118,9 @@ export function SetupForm() {
 
     const completionProgress = computeCompletionProgress(form);
     const isReadyToStart =
-        form.cvFile !== null && form.jobDescription.trim().length >= 50;
+        form.cvFile !== null &&
+        form.jobTitle.trim().length >= 2 &&
+        form.jobDescription.trim().length >= 50;
 
     const handleCvFile = useCallback((file: File) => {
         if (file.type !== "application/pdf") {
@@ -174,7 +180,6 @@ export function SetupForm() {
                     return;
                 }
 
-                // Generate a temporary session ID until DB is wired up.
                 const sessionId = crypto.randomUUID();
 
                 sessionStorage.setItem(
@@ -183,9 +188,21 @@ export function SetupForm() {
                         sessionId,
                         persona: form.persona,
                         language: form.language,
+                        jobTitle: form.jobTitle.trim(),
                         data: result.data,
                     }),
                 );
+
+                // Lưu phiên phỏng vấn vào DB (fail-soft: bỏ qua nếu chưa đăng nhập).
+                void saveInterviewSessionAction({
+                    sessionId,
+                    jobTitle: form.jobTitle.trim(),
+                    jobDescription: form.jobDescription.trim(),
+                    language: form.language,
+                    persona: form.persona,
+                    extractedSkills: result.data.summary.extractedSkills,
+                    identifiedGaps: result.data.summary.identifiedGaps,
+                });
 
                 router.push(`/interview/${sessionId}/preview`);
             } catch (err: unknown) {
@@ -202,7 +219,7 @@ export function SetupForm() {
 
     return (
         <div className="mx-auto max-w-3xl space-y-8">
-            {/* Progress tracker */}
+            {/* Thanh tiến độ hoàn tất */}
             <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>Chuẩn bị phỏng vấn</span>
@@ -217,7 +234,8 @@ export function SetupForm() {
                             idx === 0
                                 ? form.cvFile !== null
                                 : idx === 1
-                                  ? form.jobDescription.trim().length >= 50
+                                  ? form.jobTitle.trim().length >= 2 &&
+                                    form.jobDescription.trim().length >= 50
                                   : true;
                         return (
                             <div
@@ -232,7 +250,7 @@ export function SetupForm() {
                 </div>
             </div>
 
-            {/* Step 1: CV Upload */}
+            {/* Bước 1: Tải CV */}
             <Card className="border-border/70 shadow-sm">
                 <CardHeader className="pb-4">
                     <div className="flex items-center gap-2.5">
@@ -331,7 +349,7 @@ export function SetupForm() {
                 </CardContent>
             </Card>
 
-            {/* Step 2: Job Description */}
+            {/* Bước 2: Mô tả công việc */}
             <Card className="border-border/70 shadow-sm">
                 <CardHeader className="pb-4">
                     <div className="flex items-center gap-2.5">
@@ -348,22 +366,45 @@ export function SetupForm() {
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                    <Label htmlFor="job-description" className="sr-only">
-                        Nội dung Job Description
-                    </Label>
-                    <Textarea
-                        id="job-description"
-                        placeholder="Dán toàn bộ nội dung Job Description vào đây... (tối thiểu 50 ký tự)"
-                        className="min-h-[180px] resize-none text-sm leading-relaxed"
-                        value={form.jobDescription}
-                        onChange={(e) =>
-                            setForm((prev) => ({
-                                ...prev,
-                                jobDescription: e.target.value,
-                            }))
-                        }
-                    />
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label
+                            htmlFor="job-title"
+                            className="text-xs font-semibold"
+                        >
+                            Vị trí ứng tuyển
+                        </Label>
+                        <Input
+                            id="job-title"
+                            placeholder="VD: Frontend Developer, Data Analyst..."
+                            className="text-sm"
+                            maxLength={120}
+                            value={form.jobTitle}
+                            onChange={(e) =>
+                                setForm((prev) => ({
+                                    ...prev,
+                                    jobTitle: e.target.value,
+                                }))
+                            }
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="job-description" className="sr-only">
+                            Nội dung Job Description
+                        </Label>
+                        <Textarea
+                            id="job-description"
+                            placeholder="Dán toàn bộ nội dung Job Description vào đây... (tối thiểu 50 ký tự)"
+                            className="min-h-[180px] resize-none text-sm leading-relaxed"
+                            value={form.jobDescription}
+                            onChange={(e) =>
+                                setForm((prev) => ({
+                                    ...prev,
+                                    jobDescription: e.target.value,
+                                }))
+                            }
+                        />
+                    </div>
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                         <span>
                             Tối thiểu 50 ký tự để AI phân tích chính xác
@@ -377,7 +418,7 @@ export function SetupForm() {
                 </CardContent>
             </Card>
 
-            {/* Step 3: Language + Persona */}
+            {/* Bước 3: Ngôn ngữ + Persona */}
             <Card className="border-border/70 shadow-sm">
                 <CardHeader className="pb-4">
                     <div className="flex items-center gap-2.5">
@@ -395,7 +436,7 @@ export function SetupForm() {
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    {/* Language selector */}
+                    {/* Chọn ngôn ngữ */}
                     <div className="space-y-2">
                         <Label
                             htmlFor="language"
@@ -434,7 +475,7 @@ export function SetupForm() {
                         </Select>
                     </div>
 
-                    {/* Persona cards */}
+                    {/* Các thẻ chọn người phỏng vấn */}
                     <div className="space-y-2">
                         <Label className="text-xs font-semibold">
                             Người phỏng vấn AI
@@ -481,7 +522,7 @@ export function SetupForm() {
                         </div>
                     </div>
 
-                    {/* Selected persona summary */}
+                    {/* Tóm tắt persona đã chọn */}
                     <div
                         className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${selectedPersona.accentColor}`}
                     >
@@ -504,7 +545,7 @@ export function SetupForm() {
                 </CardContent>
             </Card>
 
-            {/* CTA */}
+            {/* Nút CTA */}
             <div className="flex flex-col items-center gap-3 pb-8">
                 <Button
                     size="lg"
@@ -526,8 +567,8 @@ export function SetupForm() {
                 </Button>
                 {!isReadyToStart && !isPending && (
                     <p className="text-xs text-muted-foreground text-center">
-                        Vui lòng tải CV và dán JD (tối thiểu 50 ký tự) để tiếp
-                        tục
+                        Vui lòng tải CV, nhập vị trí ứng tuyển và dán JD (tối
+                        thiểu 50 ký tự) để tiếp tục
                     </p>
                 )}
                 {submitError && (

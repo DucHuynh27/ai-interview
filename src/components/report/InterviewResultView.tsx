@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import Link from "next/link";
+import { saveFeedbackReportAction } from "@/app/actions/persistence";
 import { evaluateInterviewSession } from "@/app/actions/report";
 import { PREVIEW_SESSION_KEY } from "@/components/interview/SetupForm";
+import { ExportPdfButton } from "@/components/report/ExportPdfButton";
+import { QuestionFeedbackCard } from "@/components/report/QuestionFeedbackCard";
+import { SampleBetterAnswerCard } from "@/components/report/SampleBetterAnswerCard";
 import { ScoreOverviewCard } from "@/components/report/ScoreOverviewCard";
 import { StrengthsWeaknessesCard } from "@/components/report/StrengthsWeaknessesCard";
-import { SampleBetterAnswerCard } from "@/components/report/SampleBetterAnswerCard";
-import { QuestionFeedbackCard } from "@/components/report/QuestionFeedbackCard";
-import { ExportPdfButton } from "@/components/report/ExportPdfButton";
-import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import type {
     InterviewSessionData,
     PersonaType,
@@ -32,12 +31,14 @@ import {
     Sparkles,
     TrendingUp,
 } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState, useTransition } from "react";
 
 interface InterviewResultViewProps {
     sessionId: string;
 }
 
-// ─── Realistic Fallback Mock Data khi mở trực tiếp / kết nối demo ────────────
+// ─── Dữ liệu mock dự phòng khi mở trực tiếp / kết nối demo ───────────────────
 const DEMO_EVALUATION_REPORT: InterviewEvaluationReport = {
     sessionId: "demo-session",
     overallScore: 82,
@@ -180,7 +181,9 @@ const DEMO_EVALUATION_REPORT: InterviewEvaluationReport = {
 };
 
 export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
-    const [report, setReport] = useState<InterviewEvaluationReport | null>(null);
+    const [report, setReport] = useState<InterviewEvaluationReport | null>(
+        null,
+    );
     const [persona, setPersona] = useState<PersonaType>("friendly_hr");
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -192,7 +195,7 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
             setIsLoading(true);
             setErrorMessage(null);
 
-            // 1. Kiểm tra cache báo cáo đã lưu trước đó
+            // 1. Kiểm tra cache báo cáo đã lưu trước đó.
             const cachedReportRaw = sessionStorage.getItem(
                 `${REPORT_STORAGE_PREFIX}${sessionId}`,
             );
@@ -204,7 +207,6 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                     ) as InterviewEvaluationReport;
                     setReport(parsedReport);
 
-                    // Lấy persona nếu có
                     const previewRaw = sessionStorage.getItem(
                         `${PREVIEW_SESSION_KEY}:${sessionId}`,
                     );
@@ -215,18 +217,18 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                             ) as InterviewSessionData;
                             setPersona(sessionData.persona);
                         } catch {
-                            // ignore
+                            // Bỏ qua preview bị hỏng.
                         }
                     }
 
                     setIsLoading(false);
                     return;
                 } catch {
-                    // Fallthrough to fetch/generate
+                    // Cache hỏng: chuyển sang bước chấm điểm lại bên dưới.
                 }
             }
 
-            // 2. Lấy dữ liệu transcript từ phiên phỏng vấn
+            // 2. Lấy dữ liệu transcript từ phiên phỏng vấn.
             const transcriptRaw = sessionStorage.getItem(
                 `${TRANSCRIPT_STORAGE_PREFIX}${sessionId}`,
             );
@@ -243,22 +245,24 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                         transcriptRaw,
                     ) as SessionTranscript;
                 } catch {
-                    // ignore
+                    // Bỏ qua transcript bị hỏng.
                 }
             }
 
             if (previewRaw) {
                 try {
-                    sessionData = JSON.parse(previewRaw) as InterviewSessionData;
+                    sessionData = JSON.parse(
+                        previewRaw,
+                    ) as InterviewSessionData;
                     if (sessionData.persona) {
                         setPersona(sessionData.persona);
                     }
                 } catch {
-                    // ignore
+                    // Bỏ qua preview bị hỏng.
                 }
             }
 
-            // 3. Nếu không có transcript thực tế (truy cập URL trực tiếp / demo mode)
+            // 3. Không có transcript thực tế (truy cập URL trực tiếp / chế độ demo).
             if (
                 !sessionTranscript ||
                 !sessionTranscript.turns ||
@@ -270,7 +274,7 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                 return;
             }
 
-            // 4. Có dữ liệu transcript: Gửi sang server action để chấm điểm STAR
+            // 4. Có dữ liệu transcript: gửi sang server action để chấm điểm STAR.
             startTransition(async () => {
                 try {
                     const payload: EvaluateSessionPayload = {
@@ -292,8 +296,11 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                             `${REPORT_STORAGE_PREFIX}${sessionId}`,
                             JSON.stringify(result.data),
                         );
+
+                        // Lưu báo cáo vào DB (fail-soft: bỏ qua nếu guest/chưa có session).
+                        void saveFeedbackReportAction(result.data);
                     } else {
-                        // Fallback sang demo nếu API gặp giới hạn key hoặc lỗi
+                        // Fallback sang demo nếu API gặp giới hạn key hoặc lỗi.
                         setErrorMessage(
                             `Không thể kết nối API AI: ${result.error}. Đang hiển thị dữ liệu phân tích mẫu.`,
                         );
@@ -327,8 +334,9 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                         Đang phân tích cấu trúc STAR & lập báo cáo...
                     </h2>
                     <p className="max-w-md text-xs text-zinc-400">
-                        Gemini 2.0 Flash đang đối soát toàn bộ transcript phỏng vấn,
-                        chấm điểm 4 tiêu chí và xây dựng câu trả lời mẫu điểm 10.
+                        Gemini 2.0 Flash đang đối soát toàn bộ transcript phỏng
+                        vấn, chấm điểm 4 tiêu chí và xây dựng câu trả lời mẫu
+                        điểm 10.
                     </p>
                 </div>
             </div>
@@ -343,11 +351,15 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                     Không tìm thấy báo cáo phỏng vấn
                 </h2>
                 <p className="text-xs text-zinc-400">
-                    Phiên phỏng vấn này chưa có dữ liệu hoặc đã bị xóa khỏi phiên làm việc.
+                    Phiên phỏng vấn này chưa có dữ liệu hoặc đã bị xóa khỏi
+                    phiên làm việc.
                 </p>
                 <Link
                     href="/interview/setup"
-                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                    className={buttonVariants({
+                        variant: "outline",
+                        size: "sm",
+                    })}
                 >
                     <RotateCcw className="mr-2 size-4" />
                     Bắt đầu phỏng vấn mới
@@ -358,7 +370,7 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
 
     return (
         <div className="space-y-8 pb-16">
-            {/* Top Notification if Error or Demo Fallback */}
+            {/* Thông báo lỗi hoặc chế độ demo */}
             {errorMessage && (
                 <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
                     <div className="flex items-center gap-2">
@@ -372,15 +384,15 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                     <div className="flex items-center gap-2">
                         <Sparkles className="size-4 shrink-0 text-amber-400" />
                         <span>
-                            <strong>Chế độ Xem Trước (Demo Report):</strong> Bạn đang
-                            xem báo cáo phân tích mẫu chuẩn STAR dựa trên hồ sơ Frontend
-                            Developer.
+                            <strong>Chế độ Xem Trước (Demo Report):</strong> Bạn
+                            đang xem báo cáo phân tích mẫu chuẩn STAR dựa trên
+                            hồ sơ Frontend Developer.
                         </span>
                     </div>
                 </div>
             )}
 
-            {/* Print-Only Header (Header thương hiệu hiển thị khi xuất PDF) */}
+            {/* Header thương hiệu chỉ hiển thị khi xuất PDF */}
             <div className="hidden print:block border-b-2 border-emerald-600 pb-4 mb-6">
                 <div className="flex items-center justify-between">
                     <div>
@@ -393,16 +405,23 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                             </span>
                         </div>
                         <p className="mt-1 text-xs text-zinc-600">
-                            Báo Cáo Phân Tích & Đánh Giá Năng Lực Phỏng Vấn Chuyên Sâu
+                            Báo Cáo Phân Tích & Đánh Giá Năng Lực Phỏng Vấn
+                            Chuyên Sâu
                         </p>
                     </div>
                     <div className="text-right text-xs text-zinc-600 space-y-0.5">
                         <p>
-                            <span className="font-semibold text-zinc-800">Mã phiên:</span>{" "}
-                            <code className="font-mono text-zinc-800">{sessionId}</code>
+                            <span className="font-semibold text-zinc-800">
+                                Mã phiên:
+                            </span>{" "}
+                            <code className="font-mono text-zinc-800">
+                                {sessionId}
+                            </code>
                         </p>
                         <p>
-                            <span className="font-semibold text-zinc-800">Ngày xuất báo cáo:</span>{" "}
+                            <span className="font-semibold text-zinc-800">
+                                Ngày xuất báo cáo:
+                            </span>{" "}
                             {new Date().toLocaleDateString("vi-VN", {
                                 day: "2-digit",
                                 month: "2-digit",
@@ -413,7 +432,7 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                 </div>
             </div>
 
-            {/* Header Title & Actions */}
+            {/* Tiêu đề & các nút hành động */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-800 pb-5 print:hidden">
                 <div>
                     <div className="flex items-center gap-2">
@@ -428,8 +447,12 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                         </Badge>
                     </div>
                     <p className="mt-1 text-xs text-zinc-400">
-                        Mã phiên: <code className="font-mono text-zinc-300">{sessionId}</code> •
-                        Hệ thống đối soát toàn diện bởi Google Gemini 2.0 Flash
+                        Mã phiên:{" "}
+                        <code className="font-mono text-zinc-300">
+                            {sessionId}
+                        </code>{" "}
+                        • Hệ thống đối soát toàn diện bởi Google Gemini 2.0
+                        Flash
                     </p>
                 </div>
 
@@ -441,7 +464,8 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                         className={buttonVariants({
                             variant: "outline",
                             size: "sm",
-                            className: "border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800",
+                            className:
+                                "border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800",
                         })}
                     >
                         <FileText className="mr-1.5 size-4" />
@@ -452,7 +476,8 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                         href="/interview/setup"
                         className={buttonVariants({
                             size: "sm",
-                            className: "bg-emerald-600 font-semibold text-white hover:bg-emerald-500 shadow-lg shadow-emerald-950",
+                            className:
+                                "bg-emerald-600 font-semibold text-white hover:bg-emerald-500 shadow-lg shadow-emerald-950",
                         })}
                     >
                         <RotateCcw className="mr-1.5 size-4" />
@@ -461,7 +486,7 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                 </div>
             </div>
 
-            {/* 1. Score Overview & STAR Radar Chart */}
+            {/* 1. Điểm tổng quan & biểu đồ radar STAR */}
             <section className="space-y-3">
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
                     <TrendingUp className="size-4 text-emerald-400" />
@@ -470,7 +495,7 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                 <ScoreOverviewCard report={report} persona={persona} />
             </section>
 
-            {/* 2. Key Strengths and Growth Areas */}
+            {/* 2. Điểm mạnh chính & điểm cần cải thiện */}
             <section className="space-y-3">
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
                     <CheckCircle2 className="size-4 text-emerald-400" />
@@ -482,7 +507,7 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                 />
             </section>
 
-            {/* 3. Gold Standard Sample Answer (10/10) */}
+            {/* 3. Câu trả lời mẫu chuẩn (10/10) */}
             {report.sampleBetterAnswer && (
                 <section className="space-y-3">
                     <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
@@ -495,12 +520,13 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                 </section>
             )}
 
-            {/* 4. Question-by-Question Detailed Feedback */}
+            {/* 4. Phản hồi chi tiết theo từng câu hỏi */}
             <section className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
                         <ListFilter className="size-4 text-emerald-400" />
-                        Đánh giá chi tiết từng câu hỏi ({report.questionFeedbacks.length} câu)
+                        Đánh giá chi tiết từng câu hỏi (
+                        {report.questionFeedbacks.length} câu)
                     </div>
                     <span className="text-[11px] text-zinc-400">
                         Nhấn vào từng câu để mở rộng phân tích & câu trả lời mẫu
@@ -518,7 +544,7 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                 </div>
             </section>
 
-            {/* 5. Unit Economics & Pitch Value Badge */}
+            {/* 5. Unit Economics & huy hiệu giá trị */}
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 text-xs text-zinc-400 backdrop-blur-md print:hidden">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5">
@@ -529,7 +555,8 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                             <span className="font-semibold text-zinc-200">
                                 Chi phí AI tối ưu (Unit Economics):
                             </span>{" "}
-                            Toàn bộ phiên phỏng vấn và báo cáo STAR 4 trụ cột tiêu tốn ~0.0008 USD (~20 - 50 VNĐ).
+                            Toàn bộ phiên phỏng vấn và báo cáo STAR 4 trụ cột
+                            tiêu tốn ~0.0008 USD (~20 - 50 VNĐ).
                         </div>
                     </div>
                     <span className="rounded-full bg-zinc-900 px-3 py-1 font-mono text-[11px] text-zinc-400 border border-zinc-800">
@@ -538,13 +565,15 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                 </div>
             </div>
 
-            {/* Print-Only Footer (Chân trang khi xuất PDF) */}
+            {/* Chân trang chỉ hiển thị khi xuất PDF */}
             <div className="hidden print:block pt-6 mt-8 border-t border-zinc-300 text-center text-xs text-zinc-500">
                 <p className="font-semibold text-zinc-700">
-                    Báo cáo đánh giá năng lực phỏng vấn chuẩn hóa bởi AI-Interview • Đánh giá tự động qua Google Gemini 2.0 Flash
+                    Báo cáo đánh giá năng lực phỏng vấn chuẩn hóa bởi
+                    AI-Interview • Đánh giá tự động qua Google Gemini 2.0 Flash
                 </p>
                 <p className="mt-0.5 text-[11px] text-zinc-400">
-                    Tài liệu phục vụ mục đích ôn luyện kỹ năng phỏng vấn cá nhân chuẩn STAR Framework.
+                    Tài liệu phục vụ mục đích ôn luyện kỹ năng phỏng vấn cá nhân
+                    chuẩn STAR Framework.
                 </p>
             </div>
         </div>

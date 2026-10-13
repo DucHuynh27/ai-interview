@@ -53,7 +53,7 @@ export function QuestionFeedbackCard({
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch {
-            // ignore
+            // Bỏ qua lỗi clipboard (một số trình duyệt chặn khi không có HTTPS).
         }
     };
 
@@ -69,7 +69,7 @@ export function QuestionFeedbackCard({
 
     return (
         <Card className="overflow-hidden border-zinc-800 bg-zinc-950/60 transition-all hover:border-zinc-700/80 print:break-inside-avoid print:bg-white print:border-zinc-300 print:text-zinc-900 print:shadow-none">
-            {/* Header / Accordion trigger */}
+            {/* Header kiêm nút accordion */}
             <CardHeader
                 className="cursor-pointer border-b border-zinc-800/60 p-5 transition-colors hover:bg-zinc-900/40 print:border-zinc-200 print:bg-zinc-50"
                 onClick={() => setIsOpen(!isOpen)}
@@ -98,7 +98,7 @@ export function QuestionFeedbackCard({
                     </div>
 
                     <div className="flex items-center gap-3">
-                        {/* Mini Star Pills */}
+                        {/* Thẻ STAR mini */}
                         <div className="hidden sm:flex items-center gap-1.5">
                             {starScores.map((s) => (
                                 <span
@@ -125,9 +125,11 @@ export function QuestionFeedbackCard({
                 </div>
             </CardHeader>
 
-            {/* Expandable Body (luôn hiển thị khi in để xuất trọn vẹn PDF) */}
-            <CardContent className={`space-y-5 p-5 sm:p-6 ${isOpen ? "block" : "hidden print:block"}`}>
-                {/* Candidate Answer Transcript */}
+            {/* Phần nội dung mở rộng (luôn hiển thị khi in để xuất trọn vẹn PDF) */}
+            <CardContent
+                className={`space-y-5 p-5 sm:p-6 ${isOpen ? "block" : "hidden print:block"}`}
+            >
+                {/* Bản ghi câu trả lời của ứng viên */}
                 <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-4 print:bg-zinc-50 print:border-zinc-200">
                     <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-zinc-400 print:text-zinc-600">
                         <User className="size-3.5 text-zinc-400 print:text-zinc-600" />
@@ -141,14 +143,16 @@ export function QuestionFeedbackCard({
                     </p>
                 </div>
 
-                {/* STAR 4 Pillar Badges */}
+                {/* Huy hiệu 4 trụ cột STAR */}
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {starScores.map((s) => (
                         <div
                             key={s.label}
                             className="flex items-center justify-between rounded-lg border border-zinc-800/80 bg-zinc-900/60 px-3 py-2 text-xs print:bg-zinc-50 print:border-zinc-200"
                         >
-                            <span className="text-zinc-400 print:text-zinc-600">{s.label}</span>
+                            <span className="text-zinc-400 print:text-zinc-600">
+                                {s.label}
+                            </span>
                             <span className="font-mono font-bold text-emerald-400 print:text-emerald-700">
                                 {s.score}/10
                             </span>
@@ -156,9 +160,8 @@ export function QuestionFeedbackCard({
                     ))}
                 </div>
 
-                {/* Strengths & Weaknesses breakdown */}
+                {/* Phân tích điểm tốt & điểm cần bổ sung */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {/* Strengths */}
                     <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/5 p-3.5 print:bg-emerald-50/40 print:border-emerald-200">
                         <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 print:text-emerald-700">
                             <CheckCircle2 className="size-3.5" />
@@ -179,7 +182,7 @@ export function QuestionFeedbackCard({
                         </ul>
                     </div>
 
-                    {/* Weaknesses */}
+                    {/* Điểm cần bổ sung */}
                     <div className="rounded-xl border border-amber-500/15 bg-amber-500/5 p-3.5 print:bg-amber-50/40 print:border-amber-200">
                         <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400 print:text-amber-700">
                             <AlertTriangle className="size-3.5" />
@@ -201,7 +204,7 @@ export function QuestionFeedbackCard({
                     </div>
                 </div>
 
-                {/* Khung Câu trả lời mẫu điểm 10 chuẩn STAR */}
+                {/* Khung câu trả lời mẫu điểm 10 chuẩn STAR */}
                 {feedback.suggestedAnswer && (
                     <div className="rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-zinc-900/90 to-zinc-900/90 p-4 shadow-sm print:bg-amber-50/40 print:border-amber-300">
                         <div className="flex items-center justify-between gap-2 border-b border-amber-500/20 pb-2.5 print:border-amber-200">
