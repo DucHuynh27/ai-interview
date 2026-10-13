@@ -1,5 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@/generated/prisma/client";
 
 // Singleton Prisma Client.
 // Prisma ORM 7 yêu cầu truyền connection qua driver adapter (PrismaPg),

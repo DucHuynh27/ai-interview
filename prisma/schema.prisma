@@ -5,7 +5,8 @@
 // Database: PostgreSQL Cloud (Supabase).
 
 generator client {
-    provider      = "prisma-client-js"
+    provider = "prisma-client"          // Đổi từ "prisma-client-js"
+    output   = "../src/generated/prisma" // Thêm dòng này, output vào src
     binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 

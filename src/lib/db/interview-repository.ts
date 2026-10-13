@@ -1,6 +1,13 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
 import { toPrismaLanguage, toPrismaPersona } from "@/lib/db/mappers";
+import type { Prisma } from "@/generated/prisma/client";
+import type { LanguageCode, PersonaType } from "@/types/interview";
+import type {
+  InterviewEvaluationReport,
+  EvaluateSessionPayload,
+} from "@/types/report";
+
 /**
  * Prisma bắt buộc giá trị Json phải là `InputJsonValue`. Các domain type của
  * ta là interface cụ thể, không tự thoả index signature của Json, nên phải
