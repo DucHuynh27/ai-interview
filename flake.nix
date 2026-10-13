@@ -25,10 +25,21 @@
           packages = with pkgs; [
             nodejs_22
             pnpm
+            # Prisma NixOS fix: cung cấp schema-engine binary thay vì để Prisma
+            # tự download (sẽ fail vì không có bản linux-nixos trên CDN của Prisma)
+            prisma-engines
           ];
+
+          env = {
+            # Trỏ Prisma CLI đến schema-engine được build bởi nixpkgs
+            PRISMA_SCHEMA_ENGINE_BINARY = "${pkgs.prisma-engines}/bin/schema-engine";
+            # Bỏ qua lỗi checksum khi Prisma không tìm thấy engine trên CDN
+            PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING = "1";
+          };
 
           shellHook = ''
             echo "🚀 AI-Interview Nix DevShell activated (Node $(node -v), pnpm $(pnpm -v))"
+            echo "🗄️  Prisma schema-engine: $PRISMA_SCHEMA_ENGINE_BINARY"
           '';
         };
       });
