@@ -8,6 +8,7 @@ import { ScoreOverviewCard } from "@/components/report/ScoreOverviewCard";
 import { StrengthsWeaknessesCard } from "@/components/report/StrengthsWeaknessesCard";
 import { SampleBetterAnswerCard } from "@/components/report/SampleBetterAnswerCard";
 import { QuestionFeedbackCard } from "@/components/report/QuestionFeedbackCard";
+import { ExportPdfButton } from "@/components/report/ExportPdfButton";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type {
@@ -379,8 +380,41 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                 </div>
             )}
 
+            {/* Print-Only Header (Header thương hiệu hiển thị khi xuất PDF) */}
+            <div className="hidden print:block border-b-2 border-emerald-600 pb-4 mb-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xl font-black tracking-tight text-zinc-900">
+                                AI-INTERVIEW
+                            </span>
+                            <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800 border border-emerald-300">
+                                STAR Certified
+                            </span>
+                        </div>
+                        <p className="mt-1 text-xs text-zinc-600">
+                            Báo Cáo Phân Tích & Đánh Giá Năng Lực Phỏng Vấn Chuyên Sâu
+                        </p>
+                    </div>
+                    <div className="text-right text-xs text-zinc-600 space-y-0.5">
+                        <p>
+                            <span className="font-semibold text-zinc-800">Mã phiên:</span>{" "}
+                            <code className="font-mono text-zinc-800">{sessionId}</code>
+                        </p>
+                        <p>
+                            <span className="font-semibold text-zinc-800">Ngày xuất báo cáo:</span>{" "}
+                            {new Date().toLocaleDateString("vi-VN", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                            })}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             {/* Header Title & Actions */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-800 pb-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-800 pb-5 print:hidden">
                 <div>
                     <div className="flex items-center gap-2">
                         <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
@@ -399,7 +433,9 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                     </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2.5">
+                <div className="flex flex-wrap items-center gap-2.5 print:hidden">
+                    <ExportPdfButton sessionId={sessionId} />
+
                     <Link
                         href={`/interview/${sessionId}`}
                         className={buttonVariants({
@@ -483,7 +519,7 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
             </section>
 
             {/* 5. Unit Economics & Pitch Value Badge */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 text-xs text-zinc-400 backdrop-blur-md">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 text-xs text-zinc-400 backdrop-blur-md print:hidden">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5">
                         <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
@@ -500,6 +536,16 @@ export function InterviewResultView({ sessionId }: InterviewResultViewProps) {
                         Gemini 2.0 Flash • 0đ STT/TTS
                     </span>
                 </div>
+            </div>
+
+            {/* Print-Only Footer (Chân trang khi xuất PDF) */}
+            <div className="hidden print:block pt-6 mt-8 border-t border-zinc-300 text-center text-xs text-zinc-500">
+                <p className="font-semibold text-zinc-700">
+                    Báo cáo đánh giá năng lực phỏng vấn chuẩn hóa bởi AI-Interview • Đánh giá tự động qua Google Gemini 2.0 Flash
+                </p>
+                <p className="mt-0.5 text-[11px] text-zinc-400">
+                    Tài liệu phục vụ mục đích ôn luyện kỹ năng phỏng vấn cá nhân chuẩn STAR Framework.
+                </p>
             </div>
         </div>
     );
