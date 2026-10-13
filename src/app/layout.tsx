@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, JetBrains_Mono } from "next/font/google";
+import { SessionProvider } from "@/components/auth/SessionProvider";
 import "./globals.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -28,7 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             className={`${beVietnamPro.variable} ${jetbrainsMono.variable} h-full antialiased`}
         >
             <body className="min-h-full flex flex-col font-sans">
-                {children}
+                <SessionProvider>{children}</SessionProvider>
             </body>
         </html>
     );

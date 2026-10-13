@@ -1,3 +1,4 @@
+import { AuthButton } from "@/components/auth/AuthButton";
 import { buttonVariants } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
@@ -53,6 +54,7 @@ export function Header() {
                 </nav>
 
                 <div className="flex items-center gap-3">
+                    <AuthButton />
                     <Link
                         href="/interview/setup"
                         className={buttonVariants({
