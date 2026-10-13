@@ -8,8 +8,8 @@ const SPEECH_LANG_MAP: Record<LanguageCode, string> = {
     en: "en-US",
 };
 
-// ─── Ambient type shims for the non-standard Web Speech API ─────────────────
-// SpeechRecognition is not part of the standardised TypeScript DOM lib yet.
+// ─── Khai báo type tạm cho Web Speech API không chuẩn ────────────────────────
+// SpeechRecognition chưa nằm trong lib DOM chuẩn hoá của TypeScript.
 
 interface SpeechRecognitionResultItem {
     readonly transcript: string;
@@ -67,7 +67,7 @@ function getSpeechRecognitionCtor(): WebSpeechRecognitionConstructor | null {
     return win.SpeechRecognition ?? win.webkitSpeechRecognition ?? null;
 }
 
-// ─── Public API ───────────────────────────────────────────────────────────────
+// ─── API công khai ────────────────────────────────────────────────────────────
 
 export type SpeechRecognitionStatus =
     | "idle"
@@ -84,7 +84,7 @@ interface UseSpeechRecognitionOptions {
 
 interface UseSpeechRecognitionReturn {
     status: SpeechRecognitionStatus;
-    /** Live microphone amplitude 0–100, drives waveform bar heights. */
+    /** Biên độ micro trực tiếp 0–100, điều khiển chiều cao thanh sóng âm. */
     audioLevel: number;
     start: () => void;
     stop: () => void;
@@ -122,7 +122,7 @@ export function useSpeechRecognition({
                 dataArray.reduce((sum, val) => sum + val * val, 0) /
                     dataArray.length,
             );
-            // Map RMS (0–255) to 0–100, boosted slightly for visual clarity
+            // Ánh xạ RMS (0–255) về 0–100, tăng nhẹ để nhìn rõ hơn
             setAudioLevel(Math.min(100, Math.round((rms / 128) * 100)));
             animFrameRef.current = requestAnimationFrame(tick);
         };
@@ -154,7 +154,7 @@ export function useSpeechRecognition({
     const start = useCallback(() => {
         if (!SpeechRecognitionCtor) return;
 
-        // Toggle off if already listening
+        // Tắt nếu đang nghe
         if (status === "listening") {
             stop();
             return;
@@ -203,11 +203,11 @@ export function useSpeechRecognition({
 
         recognition.onend = () => {
             if (!isStoppingRef.current) {
-                // Browser closed the session due to silence; restart to keep listening
+                // Trình duyệt tự đóng phiên do im lặng; khởi động lại để tiếp tục nghe.
                 try {
                     recognition.start();
                 } catch {
-                    // Already started or permission revoked
+                    // Đã khởi động rồi hoặc quyền đã bị thu hồi.
                 }
                 return;
             }
@@ -225,9 +225,9 @@ export function useSpeechRecognition({
 
         recognition.start();
 
-        // Attach AudioContext analyser for live waveform visualisation.
-        // Runs independently of the SpeechRecognition session so it fails
-        // gracefully when getUserMedia is denied.
+        // Gắn analyser AudioContext để hiển thị sóng âm trực tiếp.
+        // Chạy độc lập với phiên SpeechRecognition nên sẽ tự fail mềm
+        // khi getUserMedia bị từ chối.
         navigator.mediaDevices
             ?.getUserMedia({ audio: true, video: false })
             .then((stream) => {
@@ -246,7 +246,7 @@ export function useSpeechRecognition({
                 startLevelPolling();
             })
             .catch(() => {
-                // STT still works without waveform if getUserMedia fails
+                // STT vẫn hoạt động dù không có sóng âm nếu getUserMedia lỗi.
             });
     }, [
         SpeechRecognitionCtor,

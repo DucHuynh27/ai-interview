@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
 import type { InterviewEvaluationReport } from "@/types/report";
+import { describe, expect, it } from "vitest";
 
 describe("STAR Report Calculations & Data Integrity", () => {
     it("should clamp STAR scores within 0-10 range for radar chart calculation", () => {
@@ -33,16 +33,16 @@ describe("STAR Report Calculations & Data Integrity", () => {
         });
 
         expect(points).toHaveLength(4);
-        // Situation is at top (x close to center, y < center)
+        // Situation ở trên cùng (x gần tâm, y < tâm).
         expect(points[0].x).toBeCloseTo(center, 1);
         expect(points[0].y).toBeLessThan(center);
-        // Task is at right (x > center, y close to center)
+        // Task ở bên phải (x > tâm, y gần tâm).
         expect(points[1].x).toBeGreaterThan(center);
         expect(points[1].y).toBeCloseTo(center, 1);
-        // Action is at bottom (x close to center, y > center)
+        // Action ở dưới cùng (x gần tâm, y > tâm).
         expect(points[2].x).toBeCloseTo(center, 1);
         expect(points[2].y).toBeGreaterThan(center);
-        // Result is at left (x < center, y close to center)
+        // Result ở bên trái (x < tâm, y gần tâm).
         expect(points[3].x).toBeLessThan(center);
         expect(points[3].y).toBeCloseTo(center, 1);
     });

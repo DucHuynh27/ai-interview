@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { handlers } from "@/auth";
+import { describe, expect, it } from "vitest";
 
 describe("NextAuth Configuration & Handlers", () => {
     it("exports GET and POST route handlers", () => {
@@ -9,7 +9,7 @@ describe("NextAuth Configuration & Handlers", () => {
     });
 
     it("verifies session callback mapping logic", () => {
-        // Test session mapping logic: assigns user.id from token.id or token.sub
+        // Kiểm tra logic ánh xạ session: gán user.id từ token.id hoặc token.sub
         const mockToken = {
             id: "user-cuid-123",
             sub: "google-sub-456",
@@ -26,7 +26,7 @@ describe("NextAuth Configuration & Handlers", () => {
             expires: new Date(Date.now() + 86400000).toISOString(),
         };
 
-        // Replicating session callback contract
+        // Mô phỏng lại contract của session callback
         const enrichedSession = {
             ...mockSession,
             user: {
@@ -55,7 +55,9 @@ describe("NextAuth Configuration & Handlers", () => {
             ...mockSession,
             user: {
                 ...mockSession.user,
-                id: (mockToken as { id?: string; sub: string }).id || mockToken.sub,
+                id:
+                    (mockToken as { id?: string; sub: string }).id ||
+                    mockToken.sub,
             },
         };
 

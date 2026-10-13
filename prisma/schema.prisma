@@ -1,0 +1,108 @@
+// Prisma schema cho AI-Interview
+// Docs: https://pris.ly/d/prisma-schema
+//
+// Nguồn thiết kế: important_md/ARCHITECTURE.md (mục 3 - Database Schema).
+// Database: PostgreSQL Cloud (Supabase).
+
+generator client {
+    provider      = "prisma-client-js"
+    binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+enum InterviewStatus {
+    SETUP
+    IN_PROGRESS
+    COMPLETED
+    ABANDONED
+}
+
+enum PersonaType {
+    FRIENDLY_HR
+    CHALLENGING_MANAGER
+    TECH_LEAD
+}
+
+enum LanguageCode {
+    VI
+    EN
+}
+
+enum MessageRole {
+    INTERVIEWER
+    CANDIDATE
+}
+
+model User {
+    id        String   @id @default(cuid())
+    email     String   @unique
+    name      String?
+    avatarUrl String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    sessions InterviewSession[]
+}
+
+model InterviewSession {
+    id     String @id @default(cuid())
+    userId String
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    jobTitle       String
+    jobDescription String        @db.Text
+    language       LanguageCode  @default(VI)
+    persona        PersonaType   @default(FRIENDLY_HR)
+    status         InterviewStatus @default(SETUP)
+
+    // Dữ liệu phân tích khởi tạo từ AI (JSON)
+    extractedSkills Json?
+    identifiedGaps  Json?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    messages       Message[]
+    feedbackReport FeedbackReport?
+
+    @@index([userId])
+}
+
+model Message {
+    id        String           @id @default(cuid())
+    sessionId String
+    session   InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+    role        MessageRole
+    content     String        @db.Text
+    orderIndex  Int
+    durationSec Int?
+
+    createdAt DateTime @default(now())
+
+    @@index([sessionId, orderIndex])
+}
+
+model FeedbackReport {
+    id        String           @id @default(cuid())
+    sessionId String           @unique
+    session   InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+    overallScore   Int // 1 - 100
+    situationScore Int // 1 - 10
+    taskScore      Int // 1 - 10
+    actionScore    Int // 1 - 10
+    resultScore    Int // 1 - 10
+
+    strengths          Json // Mảng các điểm mạnh
+    weaknesses         Json // Mảng các điểm cần cải thiện
+    questionFeedbacks  Json // Đánh giá chi tiết & gợi ý sửa từng câu
+    sampleBetterAnswer Json // Câu trả lời mẫu điểm 10
+
+    createdAt DateTime @default(now())
+}
+
+

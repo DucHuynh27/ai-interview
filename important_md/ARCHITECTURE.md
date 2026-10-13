@@ -120,13 +120,13 @@ Sau khi kết thúc 5 câu hỏi, toàn bộ Transcript được gửi sang Gemi
 ## 3. Thiết Kế Cơ Sở Dữ Liệu (Database Schema - Prisma)
 
 ```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
-generator client {
-  provider = "prisma-client-js"
+datasource db {
+  provider = "postgresql"
 }
 
 enum InterviewStatus {
@@ -216,6 +216,15 @@ model FeedbackReport {
   createdAt          DateTime         @default(now())
 }
 ```
+
+> **Lưu ý Prisma 7 (đã triển khai):** Từ Prisma ORM 7, thuộc tính `url` **không còn** nằm trong block `datasource` của file schema. Connection string được cấu hình trong `prisma.config.ts` (dùng cho CLI/Migrate), còn runtime truyền connection qua driver adapter `@prisma/adapter-pg` (`PrismaPg`) khi khởi tạo `PrismaClient`. Do đó:
+>
+> - `prisma.config.ts`: `datasource.url = process.env.DATABASE_URL`.
+> - `src/lib/db/prisma.ts`: `new PrismaClient({ adapter: new PrismaPg({ connectionString }) })`.
+> - `generator client.binaryTargets`: thêm `debian-openssl-3.0.x` cho môi trường deploy (Vercel) và NixOS dev.
+> - Enum Prisma dùng chữ HOA (VD `FRIENDLY_HR`); app type dùng chữ thường (`friendly_hr`); việc chuyển đổi nằm ở `src/lib/db/mappers.ts`.
+
+**Chiến lược lưu trữ (fail-soft + chỉ lưu khi đăng nhập):** Lớp data-access `src/lib/db/interview-repository.ts` bọc toàn bộ thao tác DB trong `try/catch`; nếu DB lỗi hoặc chưa cấu hình thì chỉ log cảnh báo và trả `{ ok: false }`, KHÔNG làm sập luồng phỏng vấn (vốn dựa trên `sessionStorage`). Người dùng ẩn danh (chưa đăng nhập Google) không được lưu vào DB vì `InterviewSession.userId` là bắt buộc — họ vẫn sử dụng đầy đủ tính năng qua `sessionStorage`. User Google được `upsert` vào bảng `User` theo email khi đăng nhập lần đầu.
 
 ---
 

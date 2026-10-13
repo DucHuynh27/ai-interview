@@ -43,14 +43,14 @@ function findVietnameseVoice(
 ): SpeechSynthesisVoice | null {
     if (!voices || voices.length === 0) return null;
 
-    // Search by exact language tag
+    // Tìm voice tiếng Việt theo thẻ ngôn ngữ chính xác.
     const viVoices = voices.filter((v) => {
         const lang = v.lang.toLowerCase().replace(/_/g, "-");
         return lang === "vi-vn" || lang.startsWith("vi");
     });
 
     if (viVoices.length > 0) {
-        // Prefer natural / google voices
+        // Ưu tiên voice tự nhiên / Google.
         const natural = viVoices.find((v) => {
             const n = v.name.toLowerCase();
             return (
@@ -66,7 +66,7 @@ function findVietnameseVoice(
         return natural || viVoices[0];
     }
 
-    // Search by voice name
+    // Tìm voice theo tên.
     const nameMatch = voices.find((v) => {
         const n = v.name.toLowerCase();
         return (
@@ -117,8 +117,7 @@ export function useSpeechSynthesis({
     const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
     const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
-    const synth =
-        typeof window !== "undefined" ? window.speechSynthesis : null;
+    const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
     const isSupported = synth !== null;
 
     useEffect(() => {
@@ -165,13 +164,13 @@ export function useSpeechSynthesis({
             const allVoices =
                 voices.length > 0 ? voices : (synth?.getVoices() ?? []);
 
-            // If Vietnamese is requested:
-            // Check if the user's browser actually has an authentic Vietnamese voice.
+            // Nếu yêu cầu tiếng Việt:
+            // Kiểm tra xem trình duyệt người dùng có voice tiếng Việt thật hay không.
             if (language === "vi") {
                 const viVoice = findVietnameseVoice(allVoices);
 
                 if (viVoice && synth) {
-                    // Browser has native Vietnamese voice installed
+                    // Trình duyệt đã cài voice tiếng Việt native.
                     const utterance = new SpeechSynthesisUtterance(trimmed);
                     utterance.voice = viVoice;
                     utterance.lang = viVoice.lang || "vi-VN";
@@ -201,8 +200,9 @@ export function useSpeechSynthesis({
                     return;
                 }
 
-                // If browser has NO Vietnamese voice (e.g. Linux / Windows without Vietnamese pack),
-                // play high-quality native Vietnamese audio from our server route /api/tts
+                // Nếu trình duyệt KHÔNG có voice tiếng Việt (ví dụ Linux / Windows
+                // thiếu gói tiếng Việt), phát audio tiếng Việt native chất lượng cao
+                // từ route server /api/tts.
                 const audio = new Audio(
                     `/api/tts?text=${encodeURIComponent(trimmed)}&lang=vi`,
                 );
@@ -219,14 +219,14 @@ export function useSpeechSynthesis({
                 audio.onerror = () => {
                     setStatus("idle");
                     currentAudioRef.current = null;
-                    // If audio fails for any reason, finish gracefully without blocking the room
+                    // Nếu audio lỗi vì bất kỳ lý do gì, kết thúc êm để không chặn phòng.
                     const cb = pendingEndRef.current;
                     pendingEndRef.current = undefined;
                     cb?.();
                 };
 
                 audio.play().catch(() => {
-                    // If browser blocked autoplay, resolve callback so candidate can proceed
+                    // Nếu trình duyệt chặn autoplay, gọi callback để ứng viên tiếp tục.
                     setStatus("idle");
                     currentAudioRef.current = null;
                     const cb = pendingEndRef.current;
@@ -236,7 +236,7 @@ export function useSpeechSynthesis({
                 return;
             }
 
-            // English speech synthesis
+            // Tổng hợp giọng nói tiếng Anh.
             if (!synth) {
                 onEnd?.();
                 return;

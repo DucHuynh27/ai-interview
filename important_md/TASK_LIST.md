@@ -13,7 +13,7 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 | **Sprint 2** | Não Bộ AI (Gemini 2.0 Flash) | Parse PDF CV, đối soát JD, sinh 5 câu hỏi STAR & Persona    |   ✅ Hoàn thành   |  100%   |
 | **Sprint 3** | Phòng Phỏng Vấn Giọng Nói    | Turn-based Voice (Web Speech STT & TTS), Waveform UI        |   ✅ Hoàn thành   |  100%   |
 | **Sprint 4** | Đánh Giá STAR & Báo Cáo      | Chấm điểm Situation, Task, Action, Result & Câu mẫu điểm 10 |   ✅ Hoàn thành   |  100%   |
-| **Sprint 5** | Database, Auth & Pitching    | Google Login, Cloud Database, Dashboard lịch sử & Demo deck | 🔄 Đang thực hiện |  25%   |
+| **Sprint 5** | Database, Auth & Pitching    | Google Login, Cloud Database, Dashboard lịch sử & Demo deck | 🔄 Đang thực hiện |   60%   |
 
 ---
 
@@ -89,9 +89,9 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 - [x] **Task 5.1:** Tích hợp Google OAuth qua NextAuth (Auth.js v5):
     - _Files:_ `src/auth.ts`, `src/types/auth.ts`, `src/app/api/auth/[...nextauth]/route.ts`, `src/components/auth/SessionProvider.tsx`, `src/components/auth/AuthButton.tsx`, `src/components/landing/header.tsx`, `src/app/layout.tsx`, `src/components/auth/auth.test.ts`.
     - _Tiêu chuẩn hoàn thành (DoD):_ Đăng nhập Google an toàn qua Auth.js v5, lưu trữ session token, cung cấp AuthButton (đăng nhập/đăng xuất/avatar) trên Header, bọc SessionProvider toàn cục và vượt qua bộ kiểm thử unit test.
-- [ ] **Task 5.2:** Kết nối Database PostgreSQL Cloud (Neon/Supabase) qua Prisma:
-    - _Files:_ `prisma/schema.prisma`, `src/lib/db/prisma.ts`.
-    - _Tiêu chuẩn hoàn thành (DoD):_ Lưu trữ đầy đủ lịch sử các buổi phỏng vấn, transcript câu trả lời và báo cáo điểm số.
+- [x] **Task 5.2:** Kết nối Database PostgreSQL Cloud (Neon/Supabase) qua Prisma:
+    - _Files:_ `prisma/schema.prisma`, `prisma.config.ts`, `src/lib/db/prisma.ts`, `src/lib/db/mappers.ts`, `src/lib/db/interview-repository.ts`, `src/app/actions/persistence.ts`, `src/lib/db/interview-repository.test.ts`.
+    - _Tiêu chuẩn hoàn thành (DoD):_ Lưu trữ đầy đủ lịch sử các buổi phỏng vấn, transcript câu trả lời và báo cáo điểm số. Chiến lược fail-soft (không làm sập luồng chính khi DB lỗi) và chỉ lưu khi người dùng đã đăng nhập; khách ẩn danh vẫn dùng được qua sessionStorage. Vượt qua bộ kiểm thử unit test.
 - [ ] **Task 5.3:** Màn hình Dashboard cá nhân (`/dashboard`):
     - _Files:_ `src/app/dashboard/page.tsx`.
     - _Tiêu chuẩn hoàn thành (DoD):_ Xem lại các buổi phỏng vấn cũ, biểu đồ tiến bộ điểm số qua thời gian.

@@ -10,6 +10,7 @@ export type QuestionCategory =
 
 export interface SetupFormValues {
     cvFile: File | null;
+    jobTitle: string;
     jobDescription: string;
     language: LanguageCode;
     persona: PersonaType;
@@ -46,6 +47,7 @@ export interface InterviewSessionData {
     sessionId: string;
     persona: PersonaType;
     language: LanguageCode;
+    jobTitle?: string;
     data: GenerateQuestionsResult;
 }
 

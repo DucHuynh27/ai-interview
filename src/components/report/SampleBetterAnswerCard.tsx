@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { SampleBetterAnswer } from "@/types/report";
 import { Check, Copy, Crown, Lightbulb, Sparkles } from "lucide-react";
 import { useState } from "react";
@@ -21,7 +21,7 @@ export function SampleBetterAnswerCard({
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch {
-            // Clipboard write might fail in some contexts
+            // Ghi clipboard có thể lỗi ở một số ngữ cảnh (ví dụ thiếu HTTPS).
         }
     };
 
@@ -36,7 +36,8 @@ export function SampleBetterAnswerCard({
                         <div>
                             <div className="flex items-center gap-2">
                                 <h3 className="text-base font-bold text-amber-400 print:text-amber-800">
-                                    Câu Trả Lời Mẫu Điểm 10 (Gold Standard Answer)
+                                    Câu Trả Lời Mẫu Điểm 10 (Gold Standard
+                                    Answer)
                                 </h3>
                                 <Badge
                                     variant="outline"
@@ -46,7 +47,8 @@ export function SampleBetterAnswerCard({
                                 </Badge>
                             </div>
                             <p className="text-xs text-zinc-400 print:text-zinc-600">
-                                Phiên bản trả lời lý tưởng được AI tinh chỉnh dựa trên chính kinh nghiệm thực tế trong CV
+                                Phiên bản trả lời lý tưởng được AI tinh chỉnh
+                                dựa trên chính kinh nghiệm thực tế trong CV
                             </p>
                         </div>
                     </div>
@@ -59,7 +61,9 @@ export function SampleBetterAnswerCard({
                         {copied ? (
                             <>
                                 <Check className="size-3.5 text-emerald-400" />
-                                <span className="text-emerald-400">Đã sao chép</span>
+                                <span className="text-emerald-400">
+                                    Đã sao chép
+                                </span>
                             </>
                         ) : (
                             <>
@@ -72,17 +76,20 @@ export function SampleBetterAnswerCard({
             </CardHeader>
 
             <CardContent className="space-y-5 p-6">
-                {/* Question Context */}
+                {/* Ngữ cảnh câu hỏi */}
                 <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3.5 print:bg-zinc-50 print:border-zinc-200">
                     <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-zinc-400 print:text-zinc-600">
-                        <span>Áp dụng cho Câu hỏi #{sampleBetterAnswer.questionIndex || 1}:</span>
+                        <span>
+                            Áp dụng cho Câu hỏi #
+                            {sampleBetterAnswer.questionIndex || 1}:
+                        </span>
                     </div>
                     <p className="mt-1 text-sm font-semibold text-zinc-200 print:text-zinc-900">
                         &ldquo;{sampleBetterAnswer.questionText}&rdquo;
                     </p>
                 </div>
 
-                {/* The 10/10 Gold Standard Answer */}
+                {/* Câu trả lời mẫu điểm 10 */}
                 <div className="relative rounded-2xl border border-amber-500/20 bg-zinc-900/80 p-5 shadow-inner print:bg-amber-50/40 print:border-amber-200">
                     <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400 print:text-amber-800">
                         <Sparkles className="size-4" />
@@ -93,7 +100,7 @@ export function SampleBetterAnswerCard({
                     </div>
                 </div>
 
-                {/* Key Takeaway / Lesson */}
+                {/* Bài học cốt lõi */}
                 {sampleBetterAnswer.keyTakeaway && (
                     <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 print:bg-emerald-50/40 print:border-emerald-200">
                         <Lightbulb className="size-5 shrink-0 text-emerald-400 print:text-emerald-700" />

@@ -10,16 +10,16 @@ interface WaveformProps {
 }
 
 /**
- * Animated waveform visualizer.
- * Bar heights are seeded with a sinusoidal base pattern and scaled by the
- * live `audioLevel` (0–100) coming from the AnalyserNode in the hook.
+ * Bộ hiển thị sóng âm động.
+ * Chiều cao thanh được khởi tạo theo mẫu hình sin nền và nhân theo
+ * `audioLevel` (0–100) trực tiếp từ AnalyserNode trong hook.
  */
 export function Waveform({
     audioLevel,
     isActive,
     barCount = 12,
 }: WaveformProps) {
-    // Base heights define the "resting" sinusoidal shape of the waveform
+    // Chiều cao nền tạo dáng sóng hình sin lúc "nghỉ"
     const baseHeights = Array.from(
         { length: barCount },
         (_, i) => 4 + Math.round(Math.sin((i / barCount) * Math.PI) * 14),
@@ -110,7 +110,7 @@ export function MicButton({
                 aria-pressed={isListening}
                 className={`relative flex size-11 items-center justify-center rounded-full transition-all ${bgStyle} ${ringStyle} disabled:cursor-not-allowed disabled:opacity-50`}
             >
-                {/* Pulsing outer ring when listening */}
+                {/* Vòng xung ngoài khi đang nghe */}
                 {isListening && (
                     <span className="absolute size-14 animate-ping rounded-full bg-emerald-500/25" />
                 )}
