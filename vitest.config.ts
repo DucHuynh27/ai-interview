@@ -8,10 +8,16 @@ export default defineConfig({
             "**/.direnv/**",
             "**/dist/**",
         ],
+        server: {
+            deps: {
+                inline: ["next-auth"],
+            },
+        },
     },
     resolve: {
         alias: {
             "@": path.resolve(__dirname, "./src"),
+            "next/server": "next/server.js",
         },
     },
 });
