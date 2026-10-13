@@ -102,14 +102,14 @@ export function StarRadarChart({ scores, size = 320 }: StarRadarChartProps) {
                                 fill="none"
                                 stroke="currentColor"
                                 strokeWidth="1"
-                                className="text-zinc-800 dark:text-zinc-800/80"
+                                className="text-zinc-800 dark:text-zinc-800/80 print:text-zinc-300"
                                 strokeDasharray={lvl === 10 ? undefined : "3 3"}
                             />
                             {/* Level indicator label */}
                             <text
                                 x={center + 4}
                                 y={center - r + 3}
-                                className="fill-zinc-400 text-[10px] font-mono select-none"
+                                className="fill-zinc-400 text-[10px] font-mono select-none print:fill-zinc-500"
                             >
                                 {lvl}
                             </text>
@@ -130,7 +130,7 @@ export function StarRadarChart({ scores, size = 320 }: StarRadarChartProps) {
                             y2={y}
                             stroke="currentColor"
                             strokeWidth="1.2"
-                            className="text-zinc-700 dark:text-zinc-700/80"
+                            className="text-zinc-700 dark:text-zinc-700/80 print:text-zinc-400"
                         />
                     );
                 })}
@@ -152,7 +152,7 @@ export function StarRadarChart({ scores, size = 320 }: StarRadarChartProps) {
                             cx={point.x}
                             cy={point.y}
                             r="5"
-                            className="fill-emerald-400 stroke-zinc-950 dark:stroke-zinc-950"
+                            className="fill-emerald-400 stroke-zinc-950 dark:stroke-zinc-950 print:stroke-white"
                             strokeWidth="2"
                         />
                         <circle
@@ -176,7 +176,7 @@ export function StarRadarChart({ scores, size = 320 }: StarRadarChartProps) {
                                 x={x}
                                 y={y}
                                 textAnchor={axis.anchor}
-                                className="fill-zinc-100 text-xs font-semibold select-none"
+                                className="fill-zinc-100 text-xs font-semibold select-none print:fill-zinc-900"
                             >
                                 {axis.label}
                             </text>
@@ -184,7 +184,7 @@ export function StarRadarChart({ scores, size = 320 }: StarRadarChartProps) {
                                 x={x}
                                 y={y + 13}
                                 textAnchor={axis.anchor}
-                                className="fill-emerald-400 text-[11px] font-mono font-bold select-none"
+                                className="fill-emerald-400 text-[11px] font-mono font-bold select-none print:fill-emerald-700"
                             >
                                 {axis.score}/10
                             </text>
@@ -194,7 +194,7 @@ export function StarRadarChart({ scores, size = 320 }: StarRadarChartProps) {
             </svg>
 
             {/* Subtitle legend */}
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-xs text-zinc-400">
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-xs text-zinc-400 print:text-zinc-600">
                 <span className="inline-flex items-center gap-1.5">
                     <span className="size-2 rounded-full bg-emerald-500" />
                     Thang điểm 10 theo từng trụ cột STAR

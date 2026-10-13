@@ -26,26 +26,26 @@ export function SampleBetterAnswerCard({
     };
 
     return (
-        <Card className="overflow-hidden border-amber-500/30 bg-gradient-to-b from-amber-500/10 via-zinc-950/80 to-zinc-950 shadow-xl backdrop-blur-xl">
-            <CardHeader className="border-b border-amber-500/20 bg-amber-500/5 px-6 py-4">
+        <Card className="overflow-hidden border-amber-500/30 bg-gradient-to-b from-amber-500/10 via-zinc-950/80 to-zinc-950 shadow-xl backdrop-blur-xl print:break-inside-avoid print:bg-white print:border-amber-300 print:shadow-none">
+            <CardHeader className="border-b border-amber-500/20 bg-amber-500/5 px-6 py-4 print:border-amber-200 print:bg-amber-50/40">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5">
-                        <div className="flex size-9 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400">
+                        <div className="flex size-9 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 print:bg-amber-100 print:text-amber-700">
                             <Crown className="size-5" />
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
-                                <h3 className="text-base font-bold text-amber-400">
+                                <h3 className="text-base font-bold text-amber-400 print:text-amber-800">
                                     Câu Trả Lời Mẫu Điểm 10 (Gold Standard Answer)
                                 </h3>
                                 <Badge
                                     variant="outline"
-                                    className="border-amber-500/40 bg-amber-500/20 text-[10px] font-bold text-amber-300"
+                                    className="border-amber-500/40 bg-amber-500/20 text-[10px] font-bold text-amber-300 print:border-amber-400 print:bg-amber-100 print:text-amber-800"
                                 >
                                     STAR 10/10
                                 </Badge>
                             </div>
-                            <p className="text-xs text-zinc-400">
+                            <p className="text-xs text-zinc-400 print:text-zinc-600">
                                 Phiên bản trả lời lý tưởng được AI tinh chỉnh dựa trên chính kinh nghiệm thực tế trong CV
                             </p>
                         </div>
@@ -54,7 +54,7 @@ export function SampleBetterAnswerCard({
                     <button
                         type="button"
                         onClick={handleCopy}
-                        className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-300 transition-colors hover:bg-amber-500/20 hover:text-amber-200"
+                        className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-300 transition-colors hover:bg-amber-500/20 hover:text-amber-200 print:hidden"
                     >
                         {copied ? (
                             <>
@@ -73,35 +73,35 @@ export function SampleBetterAnswerCard({
 
             <CardContent className="space-y-5 p-6">
                 {/* Question Context */}
-                <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3.5">
-                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3.5 print:bg-zinc-50 print:border-zinc-200">
+                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-zinc-400 print:text-zinc-600">
                         <span>Áp dụng cho Câu hỏi #{sampleBetterAnswer.questionIndex || 1}:</span>
                     </div>
-                    <p className="mt-1 text-sm font-semibold text-zinc-200">
+                    <p className="mt-1 text-sm font-semibold text-zinc-200 print:text-zinc-900">
                         &ldquo;{sampleBetterAnswer.questionText}&rdquo;
                     </p>
                 </div>
 
                 {/* The 10/10 Gold Standard Answer */}
-                <div className="relative rounded-2xl border border-amber-500/20 bg-zinc-900/80 p-5 shadow-inner">
-                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
+                <div className="relative rounded-2xl border border-amber-500/20 bg-zinc-900/80 p-5 shadow-inner print:bg-amber-50/40 print:border-amber-200">
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400 print:text-amber-800">
                         <Sparkles className="size-4" />
                         Nội dung phát biểu mẫu chuẩn STAR:
                     </div>
-                    <div className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zinc-100">
+                    <div className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zinc-100 print:text-zinc-800">
                         {sampleBetterAnswer.goldStandardAnswer}
                     </div>
                 </div>
 
                 {/* Key Takeaway / Lesson */}
                 {sampleBetterAnswer.keyTakeaway && (
-                    <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-                        <Lightbulb className="size-5 shrink-0 text-emerald-400" />
+                    <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 print:bg-emerald-50/40 print:border-emerald-200">
+                        <Lightbulb className="size-5 shrink-0 text-emerald-400 print:text-emerald-700" />
                         <div className="space-y-1">
-                            <span className="text-xs font-bold text-emerald-400">
+                            <span className="text-xs font-bold text-emerald-400 print:text-emerald-800">
                                 Bài học cốt lõi (Key Takeaway):
                             </span>
-                            <p className="text-xs leading-relaxed text-zinc-300">
+                            <p className="text-xs leading-relaxed text-zinc-300 print:text-zinc-800">
                                 {sampleBetterAnswer.keyTakeaway}
                             </p>
                         </div>
