@@ -17,7 +17,7 @@ import type {
 import { createPartFromBase64 } from "@google/genai";
 import { z } from "zod";
 
-// ─── Zod schema: validates + types the raw Gemini JSON output ────────────────
+// ─── Zod schema: validate + định kiểu cho JSON thô từ Gemini ─────────────────
 
 const InterviewQuestionSchema = z.object({
     order: z.number().int().min(1).max(5),
@@ -40,14 +40,13 @@ const GenerateQuestionsSchema = z.object({
     questions: z.array(InterviewQuestionSchema).length(5),
 });
 
-// ─── Types for Server Action response ────────────────────────────────────────
+// ─── Kiểu dữ liệu cho phản hồi Server Action ─────────────────────────────────
 
 type ActionSuccess = { ok: true; data: GenerateQuestionsResult };
 type ActionError = { ok: false; error: string };
 export type GenerateQuestionsActionResult = ActionSuccess | ActionError;
 
 // ─── Server Action ────────────────────────────────────────────────────────────
-
 export async function generateInterviewQuestions(
     cvBuffer: ArrayBuffer,
     rawJobDescription: string,
@@ -84,7 +83,7 @@ Analyze them and generate the interview plan now. Remember: respond with ONLY th
 
         const rawText = response.text?.trim() ?? "";
 
-        // Strip accidental markdown code fences that some model outputs include
+        // Loại bỏ các dấu ``` markdown mà một số model vô tình thêm vào.
         const jsonText = rawText
             .replace(/^```(?:json)?\s*/i, "")
             .replace(/\s*```$/, "")
@@ -132,7 +131,7 @@ Analyze them and generate the interview plan now. Remember: respond with ONLY th
     }
 }
 
-// ─── Turn Feedback Schema & Action ───────────────────────────────────────────
+// ─── Schema & Action phản hồi theo lượt ──────────────────────────────────────
 
 const TurnFeedbackSchema = z.object({
     acknowledgment: z.string().min(2),

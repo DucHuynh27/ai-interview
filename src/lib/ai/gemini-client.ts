@@ -23,7 +23,7 @@ export function getAiClient(): GoogleGenAI | null {
     return _aiInstance;
 }
 
-// Lazy proxy object to prevent top-level module crash when GEMINI_API_KEY is not configured yet on deployment
+// Proxy lazy để tránh crash module ở top-level khi GEMINI_API_KEY chưa được cấu hình lúc deploy
 export const ai = new Proxy({} as GoogleGenAI, {
     get(_target, prop) {
         const client = getAiClient();

@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        // Split text into chunks that comply with Google TTS limits (~180 chars)
+        // Chia văn bản thành các đoạn tuân thủ giới hạn Google TTS (~180 ký tự).
         const sentences = text.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g) || [text];
         const chunks: string[] = [];
         let current = "";
