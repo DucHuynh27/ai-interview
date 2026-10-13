@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 describe("Export PDF Report Functionality", () => {
     it("should format correct default PDF filename based on sessionId", () => {
@@ -35,10 +35,10 @@ describe("Export PDF Report Functionality", () => {
             const sanitizedId = sessionId ? `-${sessionId.slice(0, 8)}` : "";
             doc.title = `Bao-Cao-Phong-Van-STAR${sanitizedId}`;
 
-            // Trigger print
+            // Kích hoạt in.
             win.print();
 
-            // Restore title
+            // Khôi phục lại tiêu đề gốc.
             doc.title = originalTitle;
         };
 

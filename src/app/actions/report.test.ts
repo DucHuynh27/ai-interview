@@ -1,6 +1,6 @@
+import type { EvaluateSessionPayload } from "@/types/report";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { evaluateInterviewSession } from "./report";
-import type { EvaluateSessionPayload } from "@/types/report";
 
 const { mockGenerateContent } = vi.hoisted(() => ({
     mockGenerateContent: vi.fn(),
@@ -32,7 +32,8 @@ describe("evaluateInterviewSession", () => {
                 questionIndex: 0,
                 questionText: "Hãy giới thiệu bản thân?",
                 category: "WARM_UP",
-                candidateAnswer: "Liên hệ tôi qua 0987654321 hoặc test@gmail.com",
+                candidateAnswer:
+                    "Liên hệ tôi qua 0987654321 hoặc test@gmail.com",
                 interviewerFeedback: "Cảm ơn bạn đã giới thiệu.",
                 answeredAt: "10:00:00",
             },
@@ -58,7 +59,8 @@ describe("evaluateInterviewSession", () => {
             taskScore: 9,
             actionScore: 8,
             resultScore: 9,
-            summary: "Ứng viên thể hiện thái độ tự tin và câu trả lời súc tích.",
+            summary:
+                "Ứng viên thể hiện thái độ tự tin và câu trả lời súc tích.",
             strengths: ["Giao tiếp rõ ràng", "Tự tin"],
             weaknesses: ["Cần thêm số liệu định lượng"],
             questionFeedbacks: [
@@ -99,7 +101,7 @@ describe("evaluateInterviewSession", () => {
         };
         const sentContent = calledArg.contents?.[0]?.parts?.[0]?.text ?? "";
 
-        // Verify PII is masked before passing to Gemini
+        // Xác nhận PII đã bị che trước khi gửi tới Gemini.
         expect(sentContent).toContain("[REDACTED_PHONE]");
         expect(sentContent).toContain("[REDACTED_EMAIL]");
         expect(sentContent).not.toContain("0987654321");
@@ -125,7 +127,9 @@ describe("evaluateInterviewSession", () => {
 
         expect(result.ok).toBe(false);
         if (!result.ok) {
-            expect(result.error).toContain("không thể trả về kết quả báo cáo đúng cấu trúc");
+            expect(result.error).toContain(
+                "không thể trả về kết quả báo cáo đúng cấu trúc",
+            );
         }
     });
 });
