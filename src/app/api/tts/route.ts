@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Route này gọi Google TTS theo từng chunk (tuần tự), văn bản dài có thể vượt
+// giới hạn mặc định ~10s của serverless function. Nâng lên 60s (mức tối đa
+// của gói Vercel Hobby).
+export const maxDuration = 60;
+
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const text = searchParams.get("text")?.trim();
