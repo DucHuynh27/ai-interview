@@ -3,6 +3,9 @@ import Link from "next/link";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 
+// Server Action chấm điểm STAR bằng AI (Gemini) có thể chạy lâu.
+export const maxDuration = 60;
+
 interface InterviewResultPageProps {
     params: Promise<{ id: string }>;
 }

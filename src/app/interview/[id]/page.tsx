@@ -1,5 +1,8 @@
 import { InterviewRoom } from "@/components/interview/InterviewRoom";
 
+// Server Action phản hồi theo từng lượt (Gemini) có thể chạy lâu.
+export const maxDuration = 60;
+
 interface InterviewPageProps {
     params: Promise<{ id: string }>;
 }

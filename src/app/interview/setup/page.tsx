@@ -4,6 +4,11 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+// Server Action sinh câu hỏi (Gemini, kèm CV PDF) có thể chạy lâu hơn giới hạn
+// mặc định của serverless function (Vercel Hobby ~10s). Nâng lên 60s — mức tối
+// đa của gói Hobby. Xem: node_modules/next/dist/docs/.../maxDuration.md
+export const maxDuration = 60;
+
 export const metadata: Metadata = {
     title: "Cấu hình phỏng vấn | AI-Interview",
     description:
