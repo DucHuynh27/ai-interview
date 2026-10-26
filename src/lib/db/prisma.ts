@@ -11,12 +11,23 @@ const globalForPrisma = globalThis as unknown as {
     prisma: PrismaClient | undefined;
 };
 
+// Supabase ↔ Vercel integration KHÔNG tạo biến tên `DATABASE_URL`, mà inject
+// `POSTGRES_PRISMA_URL` (pooled, dành cho Prisma) và `POSTGRES_URL`. Chấp nhận
+// cả ba tên để chạy được ở mọi môi trường mà không phải khai báo trùng.
+function resolveConnectionString(): string | undefined {
+    return (
+        process.env.DATABASE_URL ??
+        process.env.POSTGRES_PRISMA_URL ??
+        process.env.POSTGRES_URL
+    );
+}
+
 function createPrismaClient(): PrismaClient {
-    const connectionString = process.env.DATABASE_URL;
+    const connectionString = resolveConnectionString();
 
     if (!connectionString) {
         throw new Error(
-            "Thiếu biến môi trường DATABASE_URL. Vui lòng cấu hình chuỗi kết nối PostgreSQL (Supabase) trong .env.local.",
+            "Thiếu biến môi trường DATABASE_URL (hoặc POSTGRES_PRISMA_URL / POSTGRES_URL). Vui lòng cấu hình chuỗi kết nối PostgreSQL (Supabase) trong .env.local.",
         );
     }
 

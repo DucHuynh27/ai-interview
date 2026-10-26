@@ -13,6 +13,14 @@ export default defineConfig({
         path: path.join("prisma", "migrations"),
     },
     datasource: {
-        url: process.env.DATABASE_URL ?? "",
+        // Ưu tiên URL direct (dành cho migrate/db push — pgbouncer không hỗ trợ
+        // DDL/session). `POSTGRES_URL_NON_POOLING` là tên biến Supabase ↔ Vercel
+        // inject cho kết nối trực tiếp; nếu không có mới rơi về URL pooled.
+        url:
+            process.env.POSTGRES_URL_NON_POOLING ??
+            process.env.DATABASE_URL ??
+            process.env.POSTGRES_PRISMA_URL ??
+            process.env.POSTGRES_URL ??
+            "",
     },
 });
