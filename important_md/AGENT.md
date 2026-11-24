@@ -18,6 +18,10 @@ Tài liệu này là "Bộ quy tắc ứng xử và ngữ cảnh dự án" dành
   5. **Tương tác giọng nói (Turn-based Voice):** AI đọc câu hỏi qua TTS $\rightarrow$ Ứng viên trả lời bằng giọng nói qua STT $\rightarrow$ Phản hồi tự nhiên.
   6. **Báo cáo chuẩn STAR Framework:** Đánh giá Situation, Task, Action, Result; chỉ ra điểm mạnh/yếu và cung cấp câu trả lời mẫu điểm 10.
   7. **Chi phí siêu rẻ (Unit Economics):** ~200 VNĐ / phiên phỏng vấn 15 phút.
+  8. **Đăng ký dùng thử (Free Trial):** Có một link đăng ký riêng; bấm vào sẽ ra form gồm
+     **Họ tên – Email – Ngành học – Vị trí muốn ứng tuyển**. Điền đầy đủ và hợp lệ thì được
+     cấp **3 lượt phỏng vấn miễn phí**. Quota bắt buộc gắn với tài khoản Google OAuth (không
+     cấp theo email thô) và được kiểm ở phía server; UI hiển thị số lượt còn lại.
 
 ---
 
