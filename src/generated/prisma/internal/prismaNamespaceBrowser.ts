@@ -54,7 +54,8 @@ export const ModelName = {
   User: 'User',
   InterviewSession: 'InterviewSession',
   Message: 'Message',
-  FeedbackReport: 'FeedbackReport'
+  FeedbackReport: 'FeedbackReport',
+  TrialRegistration: 'TrialRegistration'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -131,6 +132,22 @@ export const FeedbackReportScalarFieldEnum = {
 } as const
 
 export type FeedbackReportScalarFieldEnum = (typeof FeedbackReportScalarFieldEnum)[keyof typeof FeedbackReportScalarFieldEnum]
+
+
+export const TrialRegistrationScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  fullName: 'fullName',
+  major: 'major',
+  targetPosition: 'targetPosition',
+  freeSessionsLeft: 'freeSessionsLeft',
+  status: 'status',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TrialRegistrationScalarFieldEnum = (typeof TrialRegistrationScalarFieldEnum)[keyof typeof TrialRegistrationScalarFieldEnum]
 
 
 export const SortOrder = {

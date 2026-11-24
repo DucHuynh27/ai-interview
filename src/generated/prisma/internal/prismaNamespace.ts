@@ -400,7 +400,8 @@ export const ModelName = {
   User: 'User',
   InterviewSession: 'InterviewSession',
   Message: 'Message',
-  FeedbackReport: 'FeedbackReport'
+  FeedbackReport: 'FeedbackReport',
+  TrialRegistration: 'TrialRegistration'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -416,7 +417,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "interviewSession" | "message" | "feedbackReport"
+    modelProps: "user" | "interviewSession" | "message" | "feedbackReport" | "trialRegistration"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -716,6 +717,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    TrialRegistration: {
+      payload: Prisma.$TrialRegistrationPayload<ExtArgs>
+      fields: Prisma.TrialRegistrationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TrialRegistrationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRegistrationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TrialRegistrationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRegistrationPayload>
+        }
+        findFirst: {
+          args: Prisma.TrialRegistrationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRegistrationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TrialRegistrationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRegistrationPayload>
+        }
+        findMany: {
+          args: Prisma.TrialRegistrationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRegistrationPayload>[]
+        }
+        create: {
+          args: Prisma.TrialRegistrationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRegistrationPayload>
+        }
+        createMany: {
+          args: Prisma.TrialRegistrationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TrialRegistrationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRegistrationPayload>[]
+        }
+        delete: {
+          args: Prisma.TrialRegistrationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRegistrationPayload>
+        }
+        update: {
+          args: Prisma.TrialRegistrationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRegistrationPayload>
+        }
+        deleteMany: {
+          args: Prisma.TrialRegistrationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TrialRegistrationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TrialRegistrationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRegistrationPayload>[]
+        }
+        upsert: {
+          args: Prisma.TrialRegistrationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialRegistrationPayload>
+        }
+        aggregate: {
+          args: Prisma.TrialRegistrationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTrialRegistration>
+        }
+        groupBy: {
+          args: Prisma.TrialRegistrationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TrialRegistrationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TrialRegistrationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TrialRegistrationCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -813,6 +888,22 @@ export const FeedbackReportScalarFieldEnum = {
 } as const
 
 export type FeedbackReportScalarFieldEnum = (typeof FeedbackReportScalarFieldEnum)[keyof typeof FeedbackReportScalarFieldEnum]
+
+
+export const TrialRegistrationScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  fullName: 'fullName',
+  major: 'major',
+  targetPosition: 'targetPosition',
+  freeSessionsLeft: 'freeSessionsLeft',
+  status: 'status',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TrialRegistrationScalarFieldEnum = (typeof TrialRegistrationScalarFieldEnum)[keyof typeof TrialRegistrationScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -978,6 +1069,20 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'TrialStatus'
+ */
+export type EnumTrialStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TrialStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'TrialStatus[]'
+ */
+export type ListEnumTrialStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TrialStatus[]'>
     
 
 
@@ -1149,6 +1254,7 @@ export type GlobalOmitConfig = {
   interviewSession?: Prisma.InterviewSessionOmit
   message?: Prisma.MessageOmit
   feedbackReport?: Prisma.FeedbackReportOmit
+  trialRegistration?: Prisma.TrialRegistrationOmit
 }
 
 /* Types for Logging */

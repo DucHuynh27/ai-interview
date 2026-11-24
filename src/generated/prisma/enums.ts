@@ -42,3 +42,12 @@ export const MessageRole = {
 } as const
 
 export type MessageRole = (typeof MessageRole)[keyof typeof MessageRole]
+
+
+export const TrialStatus = {
+  PENDING: 'PENDING',
+  ACTIVE: 'ACTIVE',
+  EXHAUSTED: 'EXHAUSTED'
+} as const
+
+export type TrialStatus = (typeof TrialStatus)[keyof typeof TrialStatus]
