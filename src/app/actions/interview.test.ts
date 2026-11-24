@@ -49,8 +49,15 @@ function buildMockQuestions(count: number) {
 describe("interview actions", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        // Mặc định coi như khách ẩn danh: không bị áp quota dùng thử.
-        mockResolveTrialAccess.mockResolvedValue({ state: "guest" });
+        // Mặc định: tài khoản đang có 3 lượt, để luồng AI chạy được tới cùng.
+        mockResolveTrialAccess.mockResolvedValue({
+            state: "active",
+            freeSessionsLeft: 3,
+        });
+        mockConsumeTrialQuota.mockResolvedValue({
+            ok: true,
+            freeSessionsLeft: 2,
+        });
     });
 
     describe("generateInterviewQuestions", () => {
@@ -121,6 +128,20 @@ describe("interview actions", () => {
             if (result.ok) {
                 expect(result.data.questions).toHaveLength(5);
             }
+        });
+
+        it("chặn khách ẩn danh — bắt buộc đăng nhập và đăng ký dùng thử", async () => {
+            mockResolveTrialAccess.mockResolvedValueOnce({ state: "guest" });
+
+            const result = await generateInterviewQuestions(
+                new ArrayBuffer(8),
+                "Tuyển dụng Frontend Developer biết React và Next.js",
+                "vi",
+                "friendly_hr",
+            );
+
+            expect(result.ok).toBe(false);
+            expect(mockGenerateContent).not.toHaveBeenCalled();
         });
 
         it("chặn và không gọi AI khi tài khoản chưa đăng ký dùng thử", async () => {

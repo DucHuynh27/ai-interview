@@ -22,6 +22,8 @@ Tài liệu này là "Bộ quy tắc ứng xử và ngữ cảnh dự án" dành
      **Họ tên – Email – Ngành học – Vị trí muốn ứng tuyển**. Điền đầy đủ và hợp lệ thì được
      cấp **3 lượt phỏng vấn miễn phí**. Quota bắt buộc gắn với tài khoản Google OAuth (không
      cấp theo email thô) và được kiểm ở phía server; UI hiển thị số lượt còn lại.
+     **Mọi buổi phỏng vấn đều yêu cầu đăng nhập Google và còn lượt** — khách ẩn danh bị chặn
+     và được mời đăng nhập/đăng ký.
 
 ---
 

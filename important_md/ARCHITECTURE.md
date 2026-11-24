@@ -62,6 +62,7 @@ graph TD
 4. Bắt buộc đăng nhập Google; khi email Google khớp email đã đăng ký thì gán `userId`, chuyển `status = ACTIVE`.
 5. Mỗi lần sinh câu hỏi thành công (`generateInterviewQuestions`), Server Action trừ **1 lượt** trong DB — client không được tự quyết định.
 6. Khi `freeSessionsLeft = 0` → `status = EXHAUSTED`: UI hiện thông báo hết lượt và Server Action từ chối yêu cầu mới.
+7. **Khách ẩn danh không được phỏng vấn**: `generateInterviewQuestions` chặn cả trạng thái `guest`, trả lỗi kèm lời mời đăng nhập Google/đăng ký dùng thử. Chỉ tài khoản `ACTIVE` và còn lượt mới chạy được.
 
 ---
 
@@ -265,7 +266,7 @@ model TrialRegistration {
 > - `generator client.binaryTargets`: thêm `debian-openssl-3.0.x` cho môi trường deploy (Vercel) và NixOS dev.
 > - Enum Prisma dùng chữ HOA (VD `FRIENDLY_HR`); app type dùng chữ thường (`friendly_hr`); việc chuyển đổi nằm ở `src/lib/db/mappers.ts`.
 
-**Chiến lược lưu trữ (fail-soft + chỉ lưu khi đăng nhập):** Lớp data-access `src/lib/db/interview-repository.ts` bọc toàn bộ thao tác DB trong `try/catch`; nếu DB lỗi hoặc chưa cấu hình thì chỉ log cảnh báo và trả `{ ok: false }`, KHÔNG làm sập luồng phỏng vấn (vốn dựa trên `sessionStorage`). Người dùng ẩn danh (chưa đăng nhập Google) không được lưu vào DB vì `InterviewSession.userId` là bắt buộc — họ vẫn sử dụng đầy đủ tính năng qua `sessionStorage`. User Google được `upsert` vào bảng `User` theo email khi đăng nhập lần đầu. Ngược lại, quota dùng thử (`TrialRegistration.freeSessionsLeft`) là ngoại lệ **không fail-soft**: nếu DB lỗi thì từ chối cấp/trừ lượt thay vì im lặng cho qua, vì đây là ranh giới giữa dùng thử và gói trả phí.
+**Chiến lược lưu trữ (fail-soft + chỉ lưu khi đăng nhập):** Lớp data-access `src/lib/db/interview-repository.ts` bọc toàn bộ thao tác DB trong `try/catch`; nếu DB lỗi hoặc chưa cấu hình thì chỉ log cảnh báo và trả `{ ok: false }`, KHÔNG làm sập luồng phỏng vấn (vốn dựa trên `sessionStorage`). Người dùng ẩn danh (chưa đăng nhập Google) không được lưu vào DB vì `InterviewSession.userId` là bắt buộc; hơn nữa từ Task 5.5, khách ẩn danh cũng **không được bắt đầu buổi phỏng vấn** (xem Bước 0), nên hầu như không phát sinh dữ liệu để lưu. User Google được `upsert` vào bảng `User` theo email khi đăng nhập lần đầu. Ngược lại, quota dùng thử (`TrialRegistration.freeSessionsLeft`) là ngoại lệ **không fail-soft**: nếu DB lỗi thì từ chối cấp/trừ lượt thay vì im lặng cho qua, vì đây là ranh giới giữa dùng thử và gói trả phí.
 
 ---
 

@@ -63,6 +63,13 @@ export async function generateInterviewQuestions(
     try {
         const trialAccess = await resolveTrialAccess();
 
+        if (trialAccess.state === "guest") {
+            return {
+                ok: false,
+                error: `Bạn cần đăng nhập Google và đăng ký dùng thử để nhận ${FREE_TRIAL_SESSION_LIMIT} lượt phỏng vấn miễn phí.`,
+            };
+        }
+
         if (trialAccess.state === "unregistered") {
             return {
                 ok: false,
