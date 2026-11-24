@@ -30,13 +30,13 @@ export function HeroSection() {
                         className="rounded-full bg-background/50 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-primary mb-6"
                     >
                         <span className="flex size-2 rounded-full bg-primary mr-2 animate-pulse"></span>
-                        Powered by Gemini 2.0 Flash
+                        Powered by Google Gemini
                     </Badge>
 
                     <h1 className="mx-auto max-w-4xl text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-                        Nâng tầm phỏng vấn với{" "}
+                        Luyện phỏng vấn như thật,{" "}
                         <span className="bg-linear-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-                            AI-Interview
+                            tự tin trước nhà tuyển dụng
                         </span>
                     </h1>
 
