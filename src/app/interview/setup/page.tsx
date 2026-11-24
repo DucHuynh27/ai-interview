@@ -4,6 +4,7 @@ import { resolveTrialAccess } from "@/lib/db/trial-repository";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { connection } from "next/server";
 
 // Server Action sinh câu hỏi (Gemini, kèm CV PDF) có thể chạy lâu hơn giới hạn
@@ -21,6 +22,12 @@ export default async function InterviewSetupPage() {
     // Quota phụ thuộc phiên đăng nhập nên trang luôn render theo từng request.
     await connection();
     const trialAccess = await resolveTrialAccess();
+
+    // Bấm "bắt đầu phỏng vấn" khi chưa đăng nhập / chưa đăng ký thì đưa thẳng
+    // sang luồng đăng ký - đăng nhập, thay vì để người dùng thấy một form bị khoá.
+    if (trialAccess.state === "guest" || trialAccess.state === "unregistered") {
+        redirect("/register");
+    }
 
     return (
         <div className="flex min-h-screen flex-col bg-background text-foreground">

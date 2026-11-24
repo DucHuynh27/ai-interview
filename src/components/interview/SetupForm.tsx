@@ -36,15 +36,12 @@ import {
     Flame,
     HeartHandshake,
     Loader2,
-    LogIn,
     ShieldCheck,
     Terminal,
     Ticket,
     Upload,
     X,
 } from "lucide-react";
-import { signIn } from "next-auth/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState, useTransition } from "react";
 
@@ -126,20 +123,16 @@ export function SetupForm({ trialAccess }: { trialAccess: TrialAccess }) {
     );
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Phỏng vấn yêu cầu đăng nhập Google + còn lượt dùng thử; mọi trạng thái
-    // khác đều bị chặn ở đây và một lần nữa ở Server Action.
+    // Trang đã chuyển khách/chưa đăng ký sang `/register`, nên ở đây chỉ còn
+    // hai trạng thái cần thông báo tại chỗ.
     const isQuotaBlocked = trialAccess.state !== "active";
 
     const quotaNotice =
-        trialAccess.state === "guest"
-            ? `Bạn cần đăng nhập Google để bắt đầu. Chưa có lượt? Đăng ký dùng thử để nhận ${FREE_TRIAL_SESSION_LIMIT} lượt miễn phí.`
-            : trialAccess.state === "unregistered"
-              ? `Bạn đang đăng nhập nhưng chưa đăng ký dùng thử. Đăng ký để nhận ${FREE_TRIAL_SESSION_LIMIT} lượt miễn phí.`
-              : trialAccess.state === "exhausted"
-                ? `Bạn đã dùng hết ${FREE_TRIAL_SESSION_LIMIT} lượt miễn phí.`
-                : trialAccess.state === "unavailable"
-                  ? "Chưa kiểm tra được số lượt còn lại của bạn. Vui lòng tải lại trang."
-                  : null;
+        trialAccess.state === "exhausted"
+            ? `Bạn đã dùng hết ${FREE_TRIAL_SESSION_LIMIT} lượt miễn phí.`
+            : trialAccess.state === "unavailable"
+              ? "Chưa kiểm tra được số lượt còn lại của bạn. Vui lòng tải lại trang."
+              : null;
 
     const completionProgress = computeCompletionProgress(form);
     const isReadyToStart =
@@ -595,40 +588,6 @@ export function SetupForm({ trialAccess }: { trialAccess: TrialAccess }) {
                             <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
                             <span>{quotaNotice}</span>
                         </div>
-                        {trialAccess.state === "guest" ? (
-                            <div className="mt-3 flex flex-wrap items-center gap-3">
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    onClick={() =>
-                                        signIn("google", {
-                                            callbackUrl: "/interview/setup",
-                                        })
-                                    }
-                                    className="h-8 gap-1.5 px-3 text-xs font-semibold"
-                                >
-                                    <LogIn className="size-3.5" />
-                                    Đăng nhập Google
-                                </Button>
-                                <Link
-                                    href="/register"
-                                    className="inline-flex items-center gap-1 font-semibold underline-offset-2 hover:underline"
-                                >
-                                    Đăng ký dùng thử
-                                    <ArrowRight className="size-3" />
-                                </Link>
-                            </div>
-                        ) : (
-                            trialAccess.state === "unregistered" && (
-                                <Link
-                                    href="/register"
-                                    className="mt-2 inline-flex items-center gap-1 font-semibold underline-offset-2 hover:underline"
-                                >
-                                    Đăng ký dùng thử ngay
-                                    <ArrowRight className="size-3" />
-                                </Link>
-                            )
-                        )}
                     </div>
                 )}
 

@@ -62,7 +62,7 @@ graph TD
 4. Bắt buộc đăng nhập Google; khi email Google khớp email đã đăng ký thì gán `userId`, chuyển `status = ACTIVE`.
 5. Mỗi lần sinh câu hỏi thành công (`generateInterviewQuestions`), Server Action trừ **1 lượt** trong DB — client không được tự quyết định.
 6. Khi `freeSessionsLeft = 0` → `status = EXHAUSTED`: UI hiện thông báo hết lượt và Server Action từ chối yêu cầu mới.
-7. **Khách ẩn danh không được phỏng vấn**: `generateInterviewQuestions` chặn cả trạng thái `guest`, trả lỗi kèm lời mời đăng nhập Google/đăng ký dùng thử. Chỉ tài khoản `ACTIVE` và còn lượt mới chạy được.
+7. **Khách ẩn danh không được phỏng vấn**: `/interview/setup` **chuyển hướng** khách (và cả tài khoản đã đăng nhập nhưng chưa đăng ký dùng thử) sang `/register`; Server Action `generateInterviewQuestions` cũng chặn cả trạng thái `guest`. Chỉ tài khoản `ACTIVE` và còn lượt mới chạy được.
 
 ---
 
