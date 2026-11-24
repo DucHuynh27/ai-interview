@@ -42,10 +42,31 @@ function createPrismaClient(): PrismaClient {
     });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+// Proxy khởi tạo client theo nhu cầu (lazy). Nếu tạo ngay ở top-level, mọi
+// module import gián tiếp — kể cả unit test — sẽ chết chỉ vì thiếu biến môi
+// trường, đúng loại lỗi từng làm Server Action trả 500 trên production.
+function createLazyPrismaClient(): PrismaClient {
+    let cached: PrismaClient | null = null;
 
-if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = prisma;
+    function resolveClient(): PrismaClient {
+        if (!cached) {
+            cached = globalForPrisma.prisma ?? createPrismaClient();
+            if (process.env.NODE_ENV !== "production") {
+                globalForPrisma.prisma = cached;
+            }
+        }
+        return cached;
+    }
+
+    return new Proxy({} as PrismaClient, {
+        get(_target, property) {
+            const client = resolveClient();
+            const value = client[property as keyof PrismaClient];
+            return typeof value === "function" ? value.bind(client) : value;
+        },
+    });
 }
+
+export const prisma = createLazyPrismaClient();
 
 export default prisma;
