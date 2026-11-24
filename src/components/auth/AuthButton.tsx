@@ -1,8 +1,9 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Loader2, LogOut } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { History, Loader2, LogOut } from "lucide-react";
+import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useState } from "react";
 
@@ -33,6 +34,18 @@ export function AuthButton() {
 
         return (
             <div className="flex items-center gap-2">
+                <Link
+                    href="/dashboard"
+                    className={buttonVariants({
+                        variant: "ghost",
+                        size: "sm",
+                        className:
+                            "hidden h-9 gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground sm:inline-flex",
+                    })}
+                >
+                    <History className="size-3.5" />
+                    Lịch sử
+                </Link>
                 <div className="flex items-center gap-2 rounded-full border border-border/60 bg-muted/30 py-1 pr-3 pl-1 shadow-xs">
                     <Avatar size="sm">
                         {user.image ? (
