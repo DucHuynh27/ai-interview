@@ -12,7 +12,6 @@ import {
     CheckCircle2,
     Code2,
     Mic,
-    Play,
     Shield,
 } from "lucide-react";
 import Link from "next/link";
@@ -50,17 +49,17 @@ export function HeroSection() {
 
                     <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
                         <Link
-                            href="/interview/setup"
+                            href="/register"
                             className={buttonVariants({
                                 size: "lg",
                                 className: "h-12 px-8 text-base shadow-sm",
                             })}
                         >
-                            Trải nghiệm miễn phí
+                            Nhận 3 lượt miễn phí
                             <ArrowRight className="size-4" />
                         </Link>
                         <Link
-                            href="#demo"
+                            href="/interview/setup"
                             className={buttonVariants({
                                 variant: "outline",
                                 size: "lg",
@@ -68,8 +67,8 @@ export function HeroSection() {
                                     "h-12 px-8 text-base bg-background/50 backdrop-blur-sm",
                             })}
                         >
-                            <Play className="size-4 mr-2" />
-                            Xem Demo
+                            Vào phòng phỏng vấn
+                            <ArrowRight className="size-4" />
                         </Link>
                     </div>
 

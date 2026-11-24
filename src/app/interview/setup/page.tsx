@@ -1,8 +1,10 @@
 import { SetupForm } from "@/components/interview/SetupForm";
 import { buttonVariants } from "@/components/ui/button";
+import { resolveTrialAccess } from "@/lib/db/trial-repository";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 
 // Server Action sinh câu hỏi (Gemini, kèm CV PDF) có thể chạy lâu hơn giới hạn
 // mặc định của serverless function (Vercel Hobby ~10s). Nâng lên 60s — mức tối
@@ -15,7 +17,11 @@ export const metadata: Metadata = {
         "Tải CV, dán Job Description và chọn phong cách người phỏng vấn AI để bắt đầu buổi luyện tập.",
 };
 
-export default function InterviewSetupPage() {
+export default async function InterviewSetupPage() {
+    // Quota phụ thuộc phiên đăng nhập nên trang luôn render theo từng request.
+    await connection();
+    const trialAccess = await resolveTrialAccess();
+
     return (
         <div className="flex min-h-screen flex-col bg-background text-foreground">
             <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
@@ -48,7 +54,7 @@ export default function InterviewSetupPage() {
                         hóa cho riêng bạn.
                     </p>
                 </div>
-                <SetupForm />
+                <SetupForm trialAccess={trialAccess} />
             </main>
         </div>
     );
