@@ -13,6 +13,7 @@ graph TD
         STT["Web Speech API (Speech-to-Text: Client)"]
         TTS["Web Speech Synth / Audio Player (TTS)"]
         MaskClient["PII Masking Pre-check (Client)"]
+        Reg["Trang Đăng Ký Dùng Thử (/register)"]
     end
 
     subgraph Server["Next.js 15 Backend (Vercel Serverless)"]
@@ -26,6 +27,11 @@ graph TD
         Gemini["Google Gemini 2.0 Flash API (PDF & Reasoning)"]
         CloudDB[("PostgreSQL Serverless (Neon / Supabase)")]
     end
+
+    Reg -->|0a. Submit form (họ tên, email, ngành, vị trí)| ServerAction
+    ServerAction -->|0b. Ghi TrialRegistration - PENDING| PrismaORM
+    Reg -->|0c. Đăng nhập Google để kích hoạt| AuthModule
+    AuthModule -->|0d. Khớp email → ACTIVE, cấp 3 lượt| ServerAction
 
     UI -->|1. Upload PDF CV + JD| MaskClient
     MaskClient -->|2. FormData| ServerAction
@@ -47,6 +53,17 @@ graph TD
 ---
 
 ## 2. Luồng Xử Lý Dữ Liệu (End-to-End Data Flow)
+
+### Bước 0: Đăng ký dùng thử (Trial Registration & Quota)
+
+1. Người dùng bấm link "Dùng thử miễn phí" → mở `/register`.
+2. Điền form: **Họ tên, Email, Ngành học, Vị trí muốn ứng tuyển** (validate bằng Zod ở client + Server Action).
+3. Ghi `TrialRegistration` với `status = PENDING`, `freeSessionsLeft = 3`.
+4. Bắt buộc đăng nhập Google; khi email Google khớp email đã đăng ký thì gán `userId`, chuyển `status = ACTIVE`.
+5. Mỗi lần sinh câu hỏi thành công (`generateInterviewQuestions`), Server Action trừ **1 lượt** trong DB — client không được tự quyết định.
+6. Khi `freeSessionsLeft = 0` → `status = EXHAUSTED`: UI hiện thông báo hết lượt và Server Action từ chối yêu cầu mới.
+
+---
 
 ### Bước 1: Setup & Anonymization (Khởi tạo & Khử định danh PII)
 
@@ -121,7 +138,8 @@ Sau khi kết thúc 5 câu hỏi, toàn bộ Transcript được gửi sang Gemi
 
 ```prisma
 generator client {
-  provider      = "prisma-client-js"
+  provider      = "prisma-client"
+  output        = "../src/generated/prisma"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
@@ -152,12 +170,19 @@ enum MessageRole {
   CANDIDATE
 }
 
+enum TrialStatus {
+  PENDING
+  ACTIVE
+  EXHAUSTED
+}
+
 model User {
   id             String             @id @default(cuid())
   email          String             @unique
   name           String?
   avatarUrl      String?
   sessions       InterviewSession[]
+  trial          TrialRegistration?
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 }
@@ -215,6 +240,22 @@ model FeedbackReport {
 
   createdAt          DateTime         @default(now())
 }
+
+model TrialRegistration {
+  id               String      @id @default(cuid())
+  email            String      @unique
+  fullName         String
+  major            String
+  targetPosition   String
+  freeSessionsLeft Int         @default(3)
+  status           TrialStatus @default(PENDING)
+
+  userId           String?     @unique
+  user             User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
 ```
 
 > **Lưu ý Prisma 7 (đã triển khai):** Từ Prisma ORM 7, thuộc tính `url` **không còn** nằm trong block `datasource` của file schema. Connection string được cấu hình trong `prisma.config.ts` (dùng cho CLI/Migrate), còn runtime truyền connection qua driver adapter `@prisma/adapter-pg` (`PrismaPg`) khi khởi tạo `PrismaClient`. Do đó:
@@ -224,7 +265,7 @@ model FeedbackReport {
 > - `generator client.binaryTargets`: thêm `debian-openssl-3.0.x` cho môi trường deploy (Vercel) và NixOS dev.
 > - Enum Prisma dùng chữ HOA (VD `FRIENDLY_HR`); app type dùng chữ thường (`friendly_hr`); việc chuyển đổi nằm ở `src/lib/db/mappers.ts`.
 
-**Chiến lược lưu trữ (fail-soft + chỉ lưu khi đăng nhập):** Lớp data-access `src/lib/db/interview-repository.ts` bọc toàn bộ thao tác DB trong `try/catch`; nếu DB lỗi hoặc chưa cấu hình thì chỉ log cảnh báo và trả `{ ok: false }`, KHÔNG làm sập luồng phỏng vấn (vốn dựa trên `sessionStorage`). Người dùng ẩn danh (chưa đăng nhập Google) không được lưu vào DB vì `InterviewSession.userId` là bắt buộc — họ vẫn sử dụng đầy đủ tính năng qua `sessionStorage`. User Google được `upsert` vào bảng `User` theo email khi đăng nhập lần đầu.
+**Chiến lược lưu trữ (fail-soft + chỉ lưu khi đăng nhập):** Lớp data-access `src/lib/db/interview-repository.ts` bọc toàn bộ thao tác DB trong `try/catch`; nếu DB lỗi hoặc chưa cấu hình thì chỉ log cảnh báo và trả `{ ok: false }`, KHÔNG làm sập luồng phỏng vấn (vốn dựa trên `sessionStorage`). Người dùng ẩn danh (chưa đăng nhập Google) không được lưu vào DB vì `InterviewSession.userId` là bắt buộc — họ vẫn sử dụng đầy đủ tính năng qua `sessionStorage`. User Google được `upsert` vào bảng `User` theo email khi đăng nhập lần đầu. Ngược lại, quota dùng thử (`TrialRegistration.freeSessionsLeft`) là ngoại lệ **không fail-soft**: nếu DB lỗi thì từ chối cấp/trừ lượt thay vì im lặng cho qua, vì đây là ranh giới giữa dùng thử và gói trả phí.
 
 ---
 

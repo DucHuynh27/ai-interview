@@ -97,6 +97,10 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
     - _Tiêu chuẩn hoàn thành (DoD):_ Xem lại các buổi phỏng vấn cũ, biểu đồ tiến bộ điểm số qua thời gian.
 - [ ] **Task 5.4:** Chuẩn bị Demo Khởi nghiệp (Startup Pitching Assets):
     - _Nội dung:_ Bài thuyết trình Unit Economics (~200đ/buổi), tài liệu bảo mật PII, kịch bản demo trực tiếp 3 phút "chuẩn không tì vết" trên sân khấu.
+- [ ] **Task 5.5:** Luồng đăng ký dùng thử & hạn mức 3 lượt miễn phí:
+    - _Files:_ `prisma/schema.prisma`, `src/types/trial.ts`, `src/app/register/page.tsx`, `src/components/trial/RegisterForm.tsx`, `src/app/actions/trial.ts`, `src/components/interview/SetupForm.tsx`, `src/components/landing/hero-section.tsx`.
+    - _Tính năng:_ Link/CTA "Dùng thử miễn phí" trên landing (và/hoặc link rời có `?ref=`) → `/register`; form gồm **Họ tên, Email, Ngành học, Vị trí muốn ứng tuyển** (Zod validate, chặn email trùng & double-submit); sau khi submit thì **bắt buộc đăng nhập Google** để kích hoạt, khớp email đăng ký với email Google; cấp **3 lượt**; hiển thị "Còn N lượt miễn phí"; trừ 1 lượt mỗi khi sinh câu hỏi thành công; hết lượt thì chặn ở UI **và** chặn lại ở Server Action (không tin client).
+    - _Tiêu chuẩn hoàn thành (DoD):_ Bảng `TrialRegistration` có migration; Server Action `registerFreeTrial` + `consumeFreeTrialQuota` (fail-soft như tầng persistence hiện có, nhưng **thao tác trừ lượt phải là nguồn tin cậy duy nhất**); state machine `PENDING → ACTIVE → EXHAUSTED`; có unit test cho logic cấp/trừ lượt và cho trường hợp email không khớp.
 
 ---
 
