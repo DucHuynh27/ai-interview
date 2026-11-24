@@ -36,7 +36,7 @@ Tất cả AI Agent **TUYỆT ĐỐI KHÔNG ĐƯỢC TỰ Ý THAY ĐỔI** công
 - **Database:** PostgreSQL Serverless (Neon hoặc Supabase).
 - **ORM:** Prisma ORM.
 - **Authentication:** Clerk Auth hoặc NextAuth.js (ưu tiên Google OAuth).
-- **AI Engine:** Google Gemini (`gemini-3.8-flash`, hỗ trợ biến `GEMINI_MODEL`, SDK `@google/genai`).
+- **AI Engine:** Google Gemini — SDK `@google/genai`. Model chạy qua biến `GEMINI_MODEL` (hiện dùng `gemini-3.5-flash-lite` vì bản flash hay quá tải) với `GEMINI_FALLBACK_MODEL`; timeout/retry chỉnh bằng `GEMINI_TIMEOUT_MS` / `GEMINI_MAX_ATTEMPTS`. **Bắt buộc truyền `httpOptions`** khi gọi API, vì mặc định SDK tự retry 5 lần (backoff tới 60s) làm request treo nhiều phút.
 - **Speech Engine:**
   - STT: Web Speech API (Client-side, 0 latency, 0 đồng).
   - TTS: Web Speech Synthesis / Edge-TTS (giọng đọc tự nhiên, 0 đồng).
