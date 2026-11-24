@@ -27,6 +27,7 @@ import type {
     PersonaType,
     SetupFormValues,
 } from "@/types/interview";
+import { FREE_TRIAL_SESSION_LIMIT, type TrialAccess } from "@/types/trial";
 import {
     AlertCircle,
     ArrowRight,
@@ -37,9 +38,11 @@ import {
     Loader2,
     ShieldCheck,
     Terminal,
+    Ticket,
     Upload,
     X,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState, useTransition } from "react";
 
@@ -100,7 +103,7 @@ function computeCompletionProgress(form: SetupFormValues): number {
     return Math.round((steps.filter(Boolean).length / steps.length) * 100);
 }
 
-export function SetupForm() {
+export function SetupForm({ trialAccess }: { trialAccess: TrialAccess }) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
 
@@ -114,7 +117,24 @@ export function SetupForm() {
     const [cvError, setCvError] = useState<string | null>(null);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [freeSessionsLeft, setFreeSessionsLeft] = useState(
+        trialAccess.state === "active" ? trialAccess.freeSessionsLeft : 0,
+    );
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const isQuotaBlocked =
+        trialAccess.state === "unregistered" ||
+        trialAccess.state === "exhausted" ||
+        trialAccess.state === "unavailable";
+
+    const quotaNotice =
+        trialAccess.state === "unregistered"
+            ? `Bạn đang đăng nhập nhưng chưa đăng ký dùng thử. Đăng ký để nhận ${FREE_TRIAL_SESSION_LIMIT} lượt miễn phí.`
+            : trialAccess.state === "exhausted"
+              ? `Bạn đã dùng hết ${FREE_TRIAL_SESSION_LIMIT} lượt miễn phí.`
+              : trialAccess.state === "unavailable"
+                ? "Chưa kiểm tra được số lượt còn lại của bạn. Vui lòng tải lại trang."
+                : null;
 
     const completionProgress = computeCompletionProgress(form);
     const isReadyToStart =
@@ -180,6 +200,10 @@ export function SetupForm() {
                     return;
                 }
 
+                if (result.remainingFreeSessions !== null) {
+                    setFreeSessionsLeft(result.remainingFreeSessions);
+                }
+
                 const sessionId = crypto.randomUUID();
 
                 sessionStorage.setItem(
@@ -219,6 +243,19 @@ export function SetupForm() {
 
     return (
         <div className="mx-auto max-w-3xl space-y-8">
+            {trialAccess.state === "active" && (
+                <div className="flex justify-center">
+                    <Badge
+                        variant="outline"
+                        className="flex items-center gap-1.5 rounded-full border-amber-500/40 text-[11px] text-amber-600 dark:text-amber-400"
+                    >
+                        <Ticket className="size-3" />
+                        Còn {freeSessionsLeft}/{FREE_TRIAL_SESSION_LIMIT} lượt
+                        miễn phí
+                    </Badge>
+                </div>
+            )}
+
             {/* Thanh tiến độ hoàn tất */}
             <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -547,10 +584,28 @@ export function SetupForm() {
 
             {/* Nút CTA */}
             <div className="flex flex-col items-center gap-3 pb-8">
+                {quotaNotice && (
+                    <div className="w-full max-w-md rounded-xl border border-amber-500/40 bg-amber-500/5 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
+                        <div className="flex items-start gap-2">
+                            <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
+                            <span>{quotaNotice}</span>
+                        </div>
+                        {trialAccess.state === "unregistered" && (
+                            <Link
+                                href="/register"
+                                className="mt-2 inline-flex items-center gap-1 font-semibold underline-offset-2 hover:underline"
+                            >
+                                Đăng ký dùng thử ngay
+                                <ArrowRight className="size-3" />
+                            </Link>
+                        )}
+                    </div>
+                )}
+
                 <Button
                     size="lg"
                     className="h-12 w-full max-w-sm px-8 text-sm font-semibold shadow-md sm:w-auto"
-                    disabled={!isReadyToStart || isPending}
+                    disabled={!isReadyToStart || isPending || isQuotaBlocked}
                     onClick={handleStartInterview}
                 >
                     {isPending ? (

@@ -18,11 +18,39 @@ vi.mock("@/lib/ai/gemini-client", () => ({
     generateContentWithFallback: (args: unknown) => mockGenerateContent(args),
 }));
 
+const { mockResolveTrialAccess, mockConsumeTrialQuota } = vi.hoisted(() => ({
+    mockResolveTrialAccess: vi.fn(),
+    mockConsumeTrialQuota: vi.fn(),
+}));
+
+vi.mock("@/lib/db/trial-repository", () => ({
+    resolveTrialAccess: mockResolveTrialAccess,
+    consumeTrialQuota: mockConsumeTrialQuota,
+}));
+
 import { ai, DEFAULT_GEMINI_MODEL } from "@/lib/ai/gemini-client";
+
+function buildMockQuestions(count: number) {
+    return {
+        summary: {
+            extractedSkills: ["React"],
+            identifiedGaps: ["Next.js internals"],
+        },
+        questions: Array.from({ length: count }, (_, index) => ({
+            order: index + 1,
+            category: index % 2 === 0 ? "WARM_UP" : "BEHAVIORAL_STAR",
+            questionVi: `Câu hỏi số ${index + 1} đủ dài để vượt qua validator?`,
+            questionEn: `Is question number ${index + 1} long enough for the validator?`,
+            targetGoal: "Mục tiêu đánh giá đủ dài cho validator",
+        })),
+    };
+}
 
 describe("interview actions", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        // Mặc định coi như khách ẩn danh: không bị áp quota dùng thử.
+        mockResolveTrialAccess.mockResolvedValue({ state: "guest" });
     });
 
     describe("generateInterviewQuestions", () => {
@@ -93,6 +121,65 @@ describe("interview actions", () => {
             if (result.ok) {
                 expect(result.data.questions).toHaveLength(5);
             }
+        });
+
+        it("chặn và không gọi AI khi tài khoản chưa đăng ký dùng thử", async () => {
+            mockResolveTrialAccess.mockResolvedValueOnce({
+                state: "unregistered",
+            });
+
+            const result = await generateInterviewQuestions(
+                new ArrayBuffer(8),
+                "Tuyển dụng Frontend Developer biết React và Next.js",
+                "vi",
+                "friendly_hr",
+            );
+
+            expect(result.ok).toBe(false);
+            expect(mockGenerateContent).not.toHaveBeenCalled();
+        });
+
+        it("chặn khi đã dùng hết lượt miễn phí", async () => {
+            mockResolveTrialAccess.mockResolvedValueOnce({
+                state: "exhausted",
+            });
+
+            const result = await generateInterviewQuestions(
+                new ArrayBuffer(8),
+                "Tuyển dụng Frontend Developer biết React và Next.js",
+                "vi",
+                "friendly_hr",
+            );
+
+            expect(result.ok).toBe(false);
+            expect(mockGenerateContent).not.toHaveBeenCalled();
+        });
+
+        it("trừ một lượt và trả về số lượt còn lại cho tài khoản đang có quota", async () => {
+            mockResolveTrialAccess.mockResolvedValueOnce({
+                state: "active",
+                freeSessionsLeft: 3,
+            });
+            mockConsumeTrialQuota.mockResolvedValueOnce({
+                ok: true,
+                freeSessionsLeft: 2,
+            });
+            vi.mocked(ai.models.generateContent).mockResolvedValueOnce({
+                text: JSON.stringify(buildMockQuestions(5)),
+            } as unknown as Awaited<ReturnType<typeof ai.models.generateContent>>);
+
+            const result = await generateInterviewQuestions(
+                new ArrayBuffer(8),
+                "Tuyển dụng Frontend Developer biết React và Next.js",
+                "vi",
+                "friendly_hr",
+            );
+
+            expect(mockConsumeTrialQuota).toHaveBeenCalledTimes(1);
+            expect(result).toMatchObject({
+                ok: true,
+                remainingFreeSessions: 2,
+            });
         });
     });
 

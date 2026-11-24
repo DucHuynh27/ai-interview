@@ -1,5 +1,5 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
+import { ensureCurrentUser } from "@/lib/db/current-user";
 import { toPrismaLanguage, toPrismaPersona } from "@/lib/db/mappers";
 import type { Prisma } from "@/generated/prisma/client";
 import type { LanguageCode, PersonaType } from "@/types/interview";
@@ -32,41 +32,6 @@ export type PersistResult =
   | { ok: true; sessionId: string }
   | { ok: false; reason: "unauthenticated" | "db_error" };
 
-/**
- * Ánh xạ user hiện tại (từ NextAuth session) sang id nội bộ trong bảng User,
- * tạo row nếu chưa có. Trả về null khi chưa đăng nhập hoặc lỗi DB.
- *
- * Dùng upsert vì user Google có thể đăng nhập lần đầu mà chưa có row trong DB.
- */
-async function ensureCurrentUserId(): Promise<string | null> {
-  try {
-    const session = await auth();
-    const email = session?.user?.email;
-    if (!email) {
-      return null;
-    }
-
-    const user = await prisma.user.upsert({
-      where: { email },
-      update: {
-        name: session.user?.name ?? undefined,
-        avatarUrl: session.user?.image ?? undefined,
-      },
-      create: {
-        email,
-        name: session.user?.name ?? undefined,
-        avatarUrl: session.user?.image ?? undefined,
-      },
-      select: { id: true },
-    });
-
-    return user.id;
-  } catch (err) {
-    console.warn("[interview-repository] Không lấy được userId:", err);
-    return null;
-  }
-}
-
 export interface PersistSessionInput {
   sessionId: string;
   jobTitle: string;
@@ -85,8 +50,8 @@ export async function persistInterviewSession(
   input: PersistSessionInput,
 ): Promise<PersistResult> {
   try {
-    const userId = await ensureCurrentUserId();
-    if (!userId) {
+    const currentUser = await ensureCurrentUser();
+    if (!currentUser) {
       return { ok: false, reason: "unauthenticated" };
     }
 
@@ -103,7 +68,7 @@ export async function persistInterviewSession(
       },
       create: {
         id: input.sessionId,
-        userId,
+        userId: currentUser.id,
         jobTitle: input.jobTitle,
         jobDescription: input.jobDescription,
         language: toPrismaLanguage(input.language),

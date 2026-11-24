@@ -37,3 +37,8 @@ export type Message = Prisma.MessageModel
  * 
  */
 export type FeedbackReport = Prisma.FeedbackReportModel
+/**
+ * Model TrialRegistration
+ * 
+ */
+export type TrialRegistration = Prisma.TrialRegistrationModel

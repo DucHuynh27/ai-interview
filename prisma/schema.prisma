@@ -37,6 +37,12 @@ enum MessageRole {
     CANDIDATE
 }
 
+enum TrialStatus {
+    PENDING
+    ACTIVE
+    EXHAUSTED
+}
+
 model User {
     id        String   @id @default(cuid())
     email     String   @unique
@@ -46,6 +52,7 @@ model User {
     updatedAt DateTime @updatedAt
 
     sessions InterviewSession[]
+    trial    TrialRegistration?
 }
 
 model InterviewSession {
@@ -104,6 +111,22 @@ model FeedbackReport {
     sampleBetterAnswer Json // Câu trả lời mẫu điểm 10
 
     createdAt DateTime @default(now())
+}
+
+model TrialRegistration {
+    id               String      @id @default(cuid())
+    email            String      @unique
+    fullName         String
+    major            String
+    targetPosition   String
+    freeSessionsLeft Int         @default(3)
+    status           TrialStatus @default(PENDING)
+
+    userId String? @unique
+    user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 
