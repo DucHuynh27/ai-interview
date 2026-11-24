@@ -51,7 +51,9 @@ import { useCallback, useRef, useState, useTransition } from "react";
 // Khoá dùng để lưu payload preview vào sessionStorage trước khi điều hướng.
 export const PREVIEW_SESSION_KEY = "ai-interview:preview";
 
-const MAX_CV_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+// Trần an toàn: request body của Vercel chỉ ~4.5MB, và file được gửi dạng
+// multipart (Blob thô, không base64) nên 3MB còn dư địa cho JD + metadata.
+const MAX_CV_SIZE_BYTES = 3 * 1024 * 1024; // 3MB
 
 const PERSONA_OPTIONS: PersonaOption[] = [
     {
@@ -151,7 +153,7 @@ export function SetupForm({ trialAccess }: { trialAccess: TrialAccess }) {
             return;
         }
         if (file.size > MAX_CV_SIZE_BYTES) {
-            setCvError("File CV vượt quá 5MB.");
+            setCvError("File CV vượt quá 3MB.");
             return;
         }
         setCvError(null);
@@ -302,7 +304,7 @@ export function SetupForm({ trialAccess }: { trialAccess: TrialAccess }) {
                                 Bước 1 — Tải CV của bạn
                             </CardTitle>
                             <CardDescription className="text-xs mt-0.5">
-                                Chỉ nhận file PDF, tối đa 5MB
+                                Chỉ nhận file PDF, tối đa 3MB
                             </CardDescription>
                         </div>
                         <Badge

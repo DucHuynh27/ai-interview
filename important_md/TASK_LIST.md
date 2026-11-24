@@ -13,7 +13,7 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 | **Sprint 2** | Não Bộ AI (Gemini 2.0 Flash) | Parse PDF CV, đối soát JD, sinh 5 câu hỏi STAR & Persona    |   ✅ Hoàn thành   |  100%   |
 | **Sprint 3** | Phòng Phỏng Vấn Giọng Nói    | Turn-based Voice (Web Speech STT & TTS), Waveform UI        |   ✅ Hoàn thành   |  100%   |
 | **Sprint 4** | Đánh Giá STAR & Báo Cáo      | Chấm điểm Situation, Task, Action, Result & Câu mẫu điểm 10 |   ✅ Hoàn thành   |  100%   |
-| **Sprint 5** | Database, Auth & Pitching    | Google Login, Cloud Database, Dashboard lịch sử & Demo deck | 🔄 Đang thực hiện |   60%   |
+| **Sprint 5** | Database, Auth & Pitching    | Google Login, Cloud Database, Dashboard lịch sử & Demo deck | 🔄 Đang thực hiện |   67%   |
 
 ---
 
@@ -102,6 +102,10 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
     - _Tính năng:_ Link/CTA "Dùng thử miễn phí" trên landing (và/hoặc link rời có `?ref=`) → `/register`; form gồm **Họ tên, Email, Ngành học, Vị trí muốn ứng tuyển** (Zod validate, chặn email trùng & double-submit); sau khi submit thì **bắt buộc đăng nhập Google** để kích hoạt, khớp email đăng ký với email Google; cấp **3 lượt**; hiển thị "Còn N lượt miễn phí"; trừ 1 lượt mỗi khi sinh câu hỏi thành công; hết lượt thì chặn ở UI **và** chặn lại ở Server Action (không tin client).
     - _Tiêu chuẩn hoàn thành (DoD):_ Bảng `TrialRegistration` có migration; Server Action `registerFreeTrial` + `consumeFreeTrialQuota` (fail-soft như tầng persistence hiện có, nhưng **thao tác trừ lượt phải là nguồn tin cậy duy nhất**); state machine `PENDING → ACTIVE → EXHAUSTED`; có unit test cho logic cấp/trừ lượt và cho trường hợp email không khớp.
     - _Ghi chú triển khai:_ Repo chưa dùng thư mục `prisma/migrations` (giống Task 5.2) nên bảng được áp lên Supabase bằng `pnpm db:push`. Từ bản hoàn thiện này, **mọi buổi phỏng vấn đều yêu cầu đăng nhập Google và còn lượt** — khách ẩn danh bị chặn ở cả UI và Server Action (phần "khách ẩn danh vẫn dùng được qua `sessionStorage`" trong DoD của Task 5.2 được thay thế bởi quy tắc mới). Server Action thực tế là `submitTrialRegistrationAction`, còn việc trừ lượt nằm trong `generateInterviewQuestions` (chỉ trừ sau khi AI sinh xong câu hỏi).
+- [x] **Task 5.6:** Dọn nợ go-live (tài liệu biến môi trường, giới hạn CV, tài liệu model):
+    - _Files:_ `.env.example`, `next.config.ts`, `src/components/interview/SetupForm.tsx`, `important_md/AGENT.md`.
+    - _Nội dung:_ bổ sung các biến mới (`GEMINI_FALLBACK_MODEL`, `GEMINI_TIMEOUT_MS`, `GEMINI_MAX_ATTEMPTS`, `POSTGRES_URL_NON_POOLING`) vào `.env.example`; thống nhất giới hạn CV về **3MB** ở cả client và `bodySizeLimit` (trước đây client cho 5MB trong khi trần request body của Vercel chỉ ~4.5MB); cập nhật mục Tech Stack trong `AGENT.md` cho khớp model đang chạy.
+    - _Tiêu chuẩn hoàn thành (DoD):_ `.env.example` mô tả đủ biến môi trường; UI báo lỗi đúng ngưỡng mới; tài liệu không còn ghi `gemini-3.8-flash` là model mặc định đang dùng.
 
 ---
 
@@ -147,6 +151,6 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 | **Quy trình** | Vi phạm **Quy tắc 5** (`AGENT.md`): hai commit `a770366`, `ec19cb5` đã được push **trực tiếp lên `main`** thay vì qua branch + Pull Request. | Thống nhất cách xử lý hậu kiểm (mở PR bổ sung/ngoại lệ hoá cho hotfix) và nhắc agent tạo branch trước khi sửa. |
 
 ### 📌 Việc còn nợ (Follow-up)
-- Cập nhật `.env.example` với các biến mới: `GEMINI_MODEL`, `GEMINI_FALLBACK_MODEL`, `GEMINI_TIMEOUT_MS`, `GEMINI_MAX_ATTEMPTS`, `POSTGRES_URL_NON_POOLING`.
-- Chốt lại giới hạn dung lượng CV (client vs `bodySizeLimit` vs trần của Vercel).
+- ~~Cập nhật `.env.example` với các biến mới~~ → **đã làm ở Task 5.6**.
+- ~~Chốt lại giới hạn dung lượng CV~~ → **đã làm ở Task 5.6** (thống nhất 3MB).
 - Cân nhắc bật lại `gemini-3.8-flash` làm primary sau khi có timeout (chấp nhận tối đa ~25s trước khi fallback) nếu cần chất lượng câu hỏi cao hơn.
