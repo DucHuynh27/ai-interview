@@ -1,7 +1,9 @@
 import type { LanguageCode, PersonaType } from "@/types/interview";
+import type { TrialStatus } from "@/types/trial";
 import type {
   PersonaType as PrismaPersonaType,
   LanguageCode as PrismaLanguageCode,
+  TrialStatus as PrismaTrialStatus,
 } from "@/generated/prisma/enums";
 
 // Prisma enum dùng chữ HOA (FRIENDLY_HR), còn app type dùng chữ thường
@@ -29,6 +31,12 @@ const LANGUAGE_FROM_PRISMA: Record<PrismaLanguageCode, LanguageCode> = {
   EN: "en",
 };
 
+const TRIAL_STATUS_TO_PRISMA: Record<TrialStatus, PrismaTrialStatus> = {
+  pending: "PENDING",
+  active: "ACTIVE",
+  exhausted: "EXHAUSTED",
+};
+
 export function toPrismaPersona(persona: PersonaType): PrismaPersonaType {
   return PERSONA_TO_PRISMA[persona];
 }
@@ -43,4 +51,8 @@ export function toPrismaLanguage(language: LanguageCode): PrismaLanguageCode {
 
 export function fromPrismaLanguage(language: PrismaLanguageCode): LanguageCode {
   return LANGUAGE_FROM_PRISMA[language];
+}
+
+export function toPrismaTrialStatus(status: TrialStatus): PrismaTrialStatus {
+  return TRIAL_STATUS_TO_PRISMA[status];
 }
