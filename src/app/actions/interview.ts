@@ -7,6 +7,8 @@ import {
 import { buildQuestionGeneratorSystemPrompt } from "@/lib/ai/prompts/question-generator";
 import { buildTurnResponderPrompt } from "@/lib/ai/prompts/turn-responder";
 import { maskPiiText } from "@/lib/utils/pii-masker";
+import { consumeTrialQuota, resolveTrialAccess } from "@/lib/db/trial-repository";
+import { FREE_TRIAL_SESSION_LIMIT } from "@/types/trial";
 import type {
     CandidateAnswerSubmission,
     GenerateQuestionsResult,
@@ -42,7 +44,12 @@ const GenerateQuestionsSchema = z.object({
 
 // ─── Kiểu dữ liệu cho phản hồi Server Action ─────────────────────────────────
 
-type ActionSuccess = { ok: true; data: GenerateQuestionsResult };
+type ActionSuccess = {
+    ok: true;
+    data: GenerateQuestionsResult;
+    /** Số lượt dùng thử còn lại sau khi trừ; null khi người dùng là khách. */
+    remainingFreeSessions: number | null;
+};
 type ActionError = { ok: false; error: string };
 export type GenerateQuestionsActionResult = ActionSuccess | ActionError;
 
@@ -54,6 +61,29 @@ export async function generateInterviewQuestions(
     persona: PersonaType,
 ): Promise<GenerateQuestionsActionResult> {
     try {
+        const trialAccess = await resolveTrialAccess();
+
+        if (trialAccess.state === "unregistered") {
+            return {
+                ok: false,
+                error: `Bạn cần đăng ký dùng thử để nhận ${FREE_TRIAL_SESSION_LIMIT} lượt phỏng vấn miễn phí.`,
+            };
+        }
+
+        if (trialAccess.state === "exhausted") {
+            return {
+                ok: false,
+                error: `Bạn đã dùng hết ${FREE_TRIAL_SESSION_LIMIT} lượt miễn phí. Vui lòng nâng cấp gói để tiếp tục luyện tập.`,
+            };
+        }
+
+        if (trialAccess.state === "unavailable") {
+            return {
+                ok: false,
+                error: "Chưa kiểm tra được số lượt còn lại của bạn. Vui lòng thử lại sau giây lát.",
+            };
+        }
+
         const sanitizedJd = maskPiiText(rawJobDescription);
 
         const cvBase64 = Buffer.from(cvBuffer).toString("base64");
@@ -113,7 +143,17 @@ Analyze them and generate the interview plan now. Remember: respond with ONLY th
             };
         }
 
-        return { ok: true, data: validated.data };
+        // Chỉ trừ lượt sau khi AI đã sinh xong bộ câu hỏi, và chỉ với người
+        // dùng đã đăng nhập — khách ẩn danh không bị áp quota.
+        let remainingFreeSessions: number | null = null;
+        if (trialAccess.state === "active") {
+            const consumed = await consumeTrialQuota();
+            remainingFreeSessions = consumed.ok
+                ? consumed.freeSessionsLeft
+                : trialAccess.freeSessionsLeft;
+        }
+
+        return { ok: true, data: validated.data, remainingFreeSessions };
     } catch (err: unknown) {
         const rawMessage =
             err instanceof Error ? err.message : "Lỗi hệ thống máy chủ.";
