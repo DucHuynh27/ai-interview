@@ -13,7 +13,7 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 | **Sprint 2** | Não Bộ AI (Gemini 2.0 Flash) | Parse PDF CV, đối soát JD, sinh 5 câu hỏi STAR & Persona    |   ✅ Hoàn thành   |  100%   |
 | **Sprint 3** | Phòng Phỏng Vấn Giọng Nói    | Turn-based Voice (Web Speech STT & TTS), Waveform UI        |   ✅ Hoàn thành   |  100%   |
 | **Sprint 4** | Đánh Giá STAR & Báo Cáo      | Chấm điểm Situation, Task, Action, Result & Câu mẫu điểm 10 |   ✅ Hoàn thành   |  100%   |
-| **Sprint 5** | Database, Auth & Pitching    | Google Login, Cloud Database, Dashboard lịch sử & Demo deck | 🔄 Đang thực hiện |   67%   |
+| **Sprint 5** | Database, Auth & Pitching    | Google Login, Cloud Database, Dashboard lịch sử & Demo deck | 🔄 Đang thực hiện |   83%   |
 
 ---
 
@@ -92,9 +92,10 @@ Mỗi khi bắt đầu hoặc hoàn thành một task, hãy cập nhật trạng
 - [x] **Task 5.2:** Kết nối Database PostgreSQL Cloud (Neon/Supabase) qua Prisma:
     - _Files:_ `prisma/schema.prisma`, `prisma.config.ts`, `src/lib/db/prisma.ts`, `src/lib/db/mappers.ts`, `src/lib/db/interview-repository.ts`, `src/app/actions/persistence.ts`, `src/lib/db/interview-repository.test.ts`.
     - _Tiêu chuẩn hoàn thành (DoD):_ Lưu trữ đầy đủ lịch sử các buổi phỏng vấn, transcript câu trả lời và báo cáo điểm số. Chiến lược fail-soft (không làm sập luồng chính khi DB lỗi) và chỉ lưu khi người dùng đã đăng nhập; khách ẩn danh vẫn dùng được qua sessionStorage. Vượt qua bộ kiểm thử unit test.
-- [ ] **Task 5.3:** Màn hình Dashboard cá nhân (`/dashboard`):
-    - _Files:_ `src/app/dashboard/page.tsx`.
+- [x] **Task 5.3:** Màn hình Dashboard cá nhân (`/dashboard`):
+    - _Files:_ `src/app/dashboard/page.tsx`, `src/components/dashboard/InterviewHistoryList.tsx`, `src/components/dashboard/ScoreProgressChart.tsx`, `src/lib/db/interview-history-repository.ts`, `src/types/dashboard.ts`, `src/components/auth/AuthButton.tsx`.
     - _Tiêu chuẩn hoàn thành (DoD):_ Xem lại các buổi phỏng vấn cũ, biểu đồ tiến bộ điểm số qua thời gian.
+    - _Ghi chú triển khai:_ Dữ liệu đọc từ `InterviewSession` + `FeedbackReport` của chính tài khoản đang đăng nhập; biểu đồ vẽ bằng SVG thuần (không thêm thư viện chart). Danh sách hiển thị điểm STAR của từng buổi để "xem lại" ngay trên Dashboard; mở lại **báo cáo đầy đủ** của buổi cũ vẫn cần dữ liệu trong `sessionStorage` của trình duyệt (trang `/interview/[id]/result` là client + có dữ liệu demo dự phòng) — nếu muốn xem lại báo cáo cũ từ DB thì cần thêm task riêng.
 - [ ] **Task 5.4:** Chuẩn bị Demo Khởi nghiệp (Startup Pitching Assets):
     - _Nội dung:_ Bài thuyết trình Unit Economics (~200đ/buổi), tài liệu bảo mật PII, kịch bản demo trực tiếp 3 phút "chuẩn không tì vết" trên sân khấu.
 - [x] **Task 5.5:** Luồng đăng ký dùng thử & hạn mức 3 lượt miễn phí:
